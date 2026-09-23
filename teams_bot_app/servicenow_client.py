@@ -51,6 +51,8 @@ class AsyncServiceNowClient:
 
     async def authenticate(self) -> bool:
         """Verifies authentication against the ServiceNow Table API asynchronously."""
+        if not self.instance_url or not self.username or not self.password:
+            return False
         test_url = f"{self.instance_url}/api/now/table/incident?sysparm_limit=1"
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -74,6 +76,10 @@ class AsyncServiceNowClient:
         impact: Optional[int] = None
     ) -> Dict[str, Any]:
         """Asynchronously creates an incident ticket in ServiceNow via Table API."""
+        if not self.instance_url or not self.username or not self.password:
+            print("[Async ServiceNow] Credentials not configured; cannot create incident on remote ServiceNow.")
+            return {"success": False, "error": "ServiceNow credentials not configured"}
+
         endpoint = f"{self.instance_url}/api/now/table/incident"
         urgency_val = urgency if urgency is not None else priority
         impact_val = impact if impact is not None else priority
