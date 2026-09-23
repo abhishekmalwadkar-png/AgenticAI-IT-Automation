@@ -1,4 +1,4 @@
-# 🤖 Agentic AI - IT Service Automation
+# Agentic AI - IT Service Automation
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)](https://fastapi.tiangolo.com)
@@ -10,39 +10,39 @@ An enterprise-grade **Agentic AI & Robotic Process Automation (RPA) IT Service M
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 💬 1. Microsoft Teams AI Bot Simulator
-* **Authentic Teams Experience**: Built with a sleek Microsoft Teams Dark Theme, interactive adaptive cards, and real-time status banners.
+### 1. Microsoft Teams AI Bot Simulator
+* **Authentic Teams Experience**: Built with a Microsoft Teams Dark Theme, interactive adaptive cards, and real-time status updates.
 * **Microsoft Adaptive Cards 1.5**: Dynamic intake forms (`Input.Text`, `Input.ChoiceSet`, `Action.Submit`) formatted strictly according to official Microsoft Adaptive Card schemas.
 * **Role Personas**: Seamless switching between:
   * **Requester**: `Aarav Sharma (Finance Analyst)` (`aarav.sharma@company.com`)
   * **Approver**: `Priya Patel (Finance Director)` (`priya.patel@company.com`)
 
-### 🧠 2. Microsoft Agent Framework (MAF) & Intent Engine
+### 2. Microsoft Agent Framework (MAF) & Intent Engine
 * **Context-Aware Intent Classification**: Automatically recognizes and maps user queries to RPA workflows.
-* **Dynamic SLA & Priority Matrix**: Automatically calculates **Impact** (1-3), **Urgency** (1-3), and **Priority** (P1-P4) based on sentiment and urgency cues (e.g., *"emergency"*, *"production block"* $\rightarrow$ P1 / High Priority).
+* **Dynamic SLA & Priority Matrix**: Automatically calculates **Impact** (1-3), **Urgency** (1-3), and **Priority** (P1-P4) based on sentiment and urgency cues (e.g., *"emergency"*, *"production block"* -> P1 / High Priority).
 * **Slot-Filling & Multi-Turn Conversations**: Interactively prompts for missing required parameters before triggering RPA actions.
 
-### ⚙️ 3. AutomationEdge (T4) RPA Integration
+### 3. AutomationEdge (T4) RPA Integration
 * **Automated Workflow Execution**: Invokes live AutomationEdge RPA workflows via REST APIs.
-* **Execution Validation & Polling**: Actively monitors execution status (`NEW` $\rightarrow$ `RUNNING` $\rightarrow$ `COMPLETE`) before notifying the user and closing ServiceNow tickets.
+* **Execution Validation & Polling**: Actively monitors execution status (`NEW` -> `RUNNING` -> `COMPLETE`) before notifying the user and closing ServiceNow tickets.
 * **Supported Workflows**:
-  * 🔑 **Active Directory Password Reset** (`AD Password_Reset` - ID: 10383)
-  * 🔓 **Account Unlock** (`IOCO Account unlock` - ID: 10381)
-  * 👥 **Distribution List (DL) Creation** (`DL Creation - iOCO` - ID: 10394)
-  * 💼 **SAP Access & Role Assignment** (`AD_UserCreate_AssignRole` - ID: 10387)
-  * 📁 **Shared Folder Access** (`BG-Create_Service_Request_Share_Folder_Access` - ID: 9723)
+  * **Active Directory Password Reset** (`AD Password_Reset` - ID: 10383)
+  * **Account Unlock** (`IOCO Account unlock` - ID: 10381)
+  * **Distribution List (DL) Creation** (`DL Creation - iOCO` - ID: 10394)
+  * **SAP Access & Role Assignment** (`AD_UserCreate_AssignRole` - ID: 10387)
+  * **Shared Folder Access** (`BG-Create_Service_Request_Share_Folder_Access` - ID: 9723)
 
-### 🎫 4. Live ServiceNow Integration
+### 4. Live ServiceNow Integration
 * **Real-time Incident Management**: Creates, updates, tracks, and resolves incidents in ServiceNow.
 * **Dynamic Fields**: Sets caller (`Aarav Sharma`), Urgency, Impact, Priority, Short Description, and Work Notes.
 * **Flexible Authentication**: Full support for both **HTTP Basic Auth** (via dedicated integration account) and **OAuth 2.0 Bearer Tokens**.
-* **Automated Lifecycle**: Moves incident from `New (1)` $\rightarrow$ `In Progress (2)` $\rightarrow$ `Resolved (6)` upon successful RPA completion.
+* **Automated Lifecycle**: Moves incident from `New (1)` -> `In Progress (2)` -> `Resolved (6)` upon successful RPA completion.
 
 ---
 
-## 🏗️ Architecture Flow
+## Architecture Flow
 
 ```
 +------------------------+
@@ -69,13 +69,13 @@ An enterprise-grade **Agentic AI & Robotic Process Automation (RPA) IT Service M
             | 4. RPA Execution Confirmed -> State: Resolved (6)
             v
 +------------------------+
-|  Microsoft Teams Bot   |  (Delivers "🎉 Your query has been resolved!")
+|  Microsoft Teams Bot   |  (Delivers Resolution Confirmation)
 +------------------------+
 ```
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 AgenticAI-IT-Automation/
@@ -96,7 +96,7 @@ AgenticAI-IT-Automation/
 
 ---
 
-## 🚀 Quick Start & Installation
+## Quick Start & Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -143,11 +143,11 @@ uvicorn teams_bot_app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 Open your browser and navigate to:
-👉 **`http://127.0.0.1:8000`**
+**`http://127.0.0.1:8000`**
 
 ---
 
-## 🧪 Example Test Queries
+## Example Test Queries
 
 * **Password Reset**: *"I forgot my password, can you reset it?"*
 * **High Priority / SLA Test**: *"URGENT: Production server down, reset my admin password immediately!"*
@@ -157,13 +157,13 @@ Open your browser and navigate to:
 
 ---
 
-## 🔒 Security Best Practices
+## Security Best Practices
 * Credentials and API keys are managed securely via `.env` (which is excluded via `.gitignore`).
 * Dedicated integration user (`ae_integration`) with `Web service access only` is used for ServiceNow communication.
 * Secure token handling and dynamic endpoint resolution across all RPA calls.
 
 ---
 
-## 👤 Author
+## Author
 **Abhishek Malwadkar**  
 GitHub: [@abhishekmalwadkar-png](https://github.com/abhishekmalwadkar-png)
