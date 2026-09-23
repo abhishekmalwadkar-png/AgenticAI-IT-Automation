@@ -409,7 +409,7 @@ async def chat_endpoint(msg: UserMessage):
         urgency_info = detect_urgency_and_impact(f"{reason} {soft_name}", intent_key="software_license")
         prefix = f"[{urgency_info['priority_label'].upper()}] " if urgency_info['priority'] <= 2 else ""
 
-        snow_res = get_snow_client().create_incident(
+        snow_res = await get_snow_client().create_incident(
             short_description=f"{prefix}[AE Bot] Software Request: {soft_name} {version} for {username}",
             description="\n".join(snow_desc_lines),
             category="software",
@@ -479,7 +479,7 @@ async def chat_endpoint(msg: UserMessage):
             urgency_info=urgency_info
         )
         
-        snow_res = get_snow_client().create_incident(
+        snow_res = await get_snow_client().create_incident(
             short_description=snow_payload["short_description"],
             description=snow_payload["description"],
             category=intent_data["category"],
@@ -596,7 +596,7 @@ async def chat_endpoint(msg: UserMessage):
         urgency_info=urgency_info
     )
 
-    snow_res = get_snow_client().create_incident(
+    snow_res = await get_snow_client().create_incident(
         short_description=snow_payload["short_description"],
         description=snow_payload["description"],
         category=intent_data["category"],
@@ -653,7 +653,7 @@ async def approval_endpoint(payload: ApprovalAction):
     ticket_id = payload.ticket_id
     if ticket_id not in store.tickets:
         # Try fetching from live ServiceNow
-        snow_inc = get_snow_client().get_incident_by_number(ticket_id)
+        snow_inc = await get_snow_client().get_incident_by_number(ticket_id)
         if snow_inc:
             store.tickets[ticket_id] = {
                 "ticket_number": ticket_id,
@@ -691,7 +691,7 @@ async def approval_endpoint(payload: ApprovalAction):
         
         # Update live ServiceNow ticket work notes & activity journal
         if sys_id:
-            get_snow_client().update_work_notes(sys_id, approval_note, customer_visible=True)
+            await get_snow_client().update_work_notes(sys_id, approval_note, customer_visible=True)
         
         return JSONResponse({
             "status": "Approved",
@@ -704,7 +704,7 @@ async def approval_endpoint(payload: ApprovalAction):
         utc_now = time.strftime('%Y-%m-%d %H:%M:%S UTC')
         rejection_note = f"Rejected by: {payload.approver}\nAction: Rejected via Microsoft Teams Adaptive Card\nTimestamp: {utc_now}\nStatus: Closed / Rejected"
         if sys_id:
-            get_snow_client().update_work_notes(sys_id, rejection_note, state="8", customer_visible=True)
+            await get_snow_client().update_work_notes(sys_id, rejection_note, state="8", customer_visible=True)
         ticket["logs"].append(f"[{t_now}] Request REJECTED by {payload.approver}.")
         ticket["logs"].append(f"[{t_now}] Live ServiceNow ticket note updated: 'Rejected by: {payload.approver}'")
         return JSONResponse({
@@ -714,7 +714,7 @@ async def approval_endpoint(payload: ApprovalAction):
         })
     else:
         if sys_id:
-            get_snow_client().update_work_notes(sys_id, f"Clarification requested by {payload.approver} in Microsoft Teams.")
+            await get_snow_client().update_work_notes(sys_id, f"Clarification requested by {payload.approver} in Microsoft Teams.")
         ticket["logs"].append(f"[{time.strftime('%H:%M:%S')}] Clarification requested by {payload.approver}.")
         return JSONResponse({
             "status": "Info Requested",
@@ -736,7 +736,6 @@ async def webhook_ticket_created(request: Request):
         try:
             payload = json.loads(body_str)
         except Exception:
-            # Fix unquoted values from Process Studio (e.g., {"additionalInfo":test,...})
             import re
             fixed_str = re.sub(r':\s*([a-zA-Z0-9_\-\./]+)\s*([,}])', r':"\1"\2', body_str)
             try:
@@ -744,7 +743,6 @@ async def webhook_ticket_created(request: Request):
             except Exception:
                 payload = {"raw_message": body_str}
 
-    # Check if this is an error payload from Process Studio
     if payload.get("status") == "Failure" or payload.get("success") == "false":
         return JSONResponse({
             "status": "acknowledged",
@@ -762,7 +760,6 @@ async def webhook_ticket_created(request: Request):
     caller = payload.get("caller") or payload.get("requested_for") or payload.get("additionalInfo") or "Aarav Sharma"
     category = payload.get("category", "software")
     
-    # Detect intent from short description
     intent_key = detect_intent(short_desc) or "account_unlock"
     intent_data = INTENT_CATALOG.get(intent_key, INTENT_CATALOG["account_unlock"])
     
@@ -809,7 +806,7 @@ maf_orchestrator = MAFOrchestratorAgent()
 @app.post("/api/fulfill/{ticket_id}")
 async def fulfill_endpoint(ticket_id: str, request: Request):
     if ticket_id not in store.tickets:
-        snow_inc = get_snow_client().get_incident_by_number(ticket_id)
+        snow_inc = await get_snow_client().get_incident_by_number(ticket_id)
         if snow_inc:
             store.tickets[ticket_id] = {
                 "ticket_number": ticket_id,
@@ -838,7 +835,6 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
     ticket["status"] = "Fulfillment in Progress"
     sys_id = ticket.get("sys_id")
     
-    # Check if simulation flag for failure was requested
     body = {}
     try:
         body = await request.json()
@@ -847,12 +843,11 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
     simulate_failure = body.get("simulate_failure", False)
 
     # 1. MAF Stage 4: Evaluate approved ticket & construct Execution Plan
-    plan = maf_orchestrator.evaluate_and_plan(ticket)
+    plan = await maf_orchestrator.evaluate_and_plan(ticket)
     
     # 2. MAF Stage 5: Execute Tool / T4 RPA Dispatch with Exception Handling & Human Escalation
     success, result_data, telemetry_logs = await maf_orchestrator.execute_plan(plan, simulate_failure=simulate_failure, raw_ticket=ticket)
     
-    # Append logs to ticket
     for log in telemetry_logs:
         ticket["logs"].append(log)
 
@@ -860,7 +855,7 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
         ticket["status"] = "Resolved"
         resolution_msg = f"Successfully validated and fulfilled via AutomationEdge T4 workflow '{plan.target_workflow_name}' (ID: {plan.target_workflow_id})."
         if sys_id:
-            get_snow_client().close_incident(sys_id, resolution_msg)
+            await get_snow_client().close_incident(sys_id, resolution_msg)
             ticket["logs"].append(f"[{time.strftime('%H:%M:%S')}] ServiceNow incident {ticket_id} state changed to 6 (Resolved).")
 
         completion_card = {
@@ -888,7 +883,7 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
         ticket["status"] = "Escalated to Tier-2 Support"
         escalation_notes = f"MAF Automated fulfillment halted: {result_data.get('reason')}. Reassigned to {result_data.get('assigned_to')}."
         if sys_id:
-            get_snow_client().update_work_notes(sys_id, f"[MAF Tier-2 Escalation] {escalation_notes}")
+            await get_snow_client().update_work_notes(sys_id, f"[MAF Tier-2 Escalation] {escalation_notes}")
 
         return JSONResponse({
             "success": False,

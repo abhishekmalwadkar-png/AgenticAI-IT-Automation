@@ -1,11 +1,14 @@
+"""
+Microsoft Agent Framework (MAF) Orchestrator & AutomationEdge (T4) Discovery Engine
+High-performance asynchronous implementation using native asyncio and httpx.
+"""
+
 import os
 import time
 import json
 import asyncio
-import urllib.request
-import urllib.parse
-import http.cookiejar
 from typing import Dict, Any, List, Optional, Tuple
+import httpx
 
 # Official Microsoft Agent Framework SDK Imports
 import autogen_core
@@ -24,123 +27,112 @@ def load_env(env_path: str = "d:/Agentic_AI-IT_service_automation/.env"):
                     k, v = line.split("=", 1)
                     os.environ[k.strip()] = v.strip()
 
-class T4WorkflowDiscoveryClient:
+
+class AsyncT4DiscoveryClient:
     """
-    Dynamic Tool & Workflow Discovery Client for AutomationEdge (T4) Server.
-    Discovers live workflows and inspects their runtime parameter schemas dynamically from the server.
+    Asynchronous Dynamic Tool & Workflow Discovery Client for AutomationEdge (T4) Server.
+    Discovers live workflows and inspects their runtime parameter schemas dynamically.
     """
-    def __init__(self):
+    def __init__(self, timeout: float = 15.0):
         load_env()
         self.base_url = os.getenv("AUTOMATIONEDGE_T4_URL", "https://t4.automationedge.com").rstrip("/")
         self.user = os.getenv("AUTOMATIONEDGE_T4_USER")
         self.pwd = os.getenv("AUTOMATIONEDGE_T4_PASSWORD")
-        self.cj = http.cookiejar.CookieJar()
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
+        self.timeout = timeout
         self.session_token: Optional[str] = None
         self.org_code: Optional[str] = os.getenv("AUTOMATIONEDGE_T4_ORGCODE", None)
         self._cached_workflows: List[Dict[str, Any]] = []
 
-    def _authenticate(self) -> bool:
+    async def authenticate(self) -> bool:
+        """Asynchronously authenticates with the AutomationEdge T4 REST API."""
         if not self.user or not self.pwd:
             return False
-        
+
         auth_url = f"{self.base_url}/aeengine/rest/authenticate"
-        auth_data = urllib.parse.urlencode({
+        auth_data = {
             "username": self.user,
             "password": self.pwd
-        }).encode("utf-8")
-
-        req = urllib.request.Request(auth_url, data=auth_data, headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
-        })
+        }
 
         try:
-            resp = self.opener.open(req, timeout=12)
-            data = json.loads(resp.read().decode("utf-8"))
-            self.session_token = data.get("sessionToken")
-            self.org_code = data.get("tenant", {}).get("orgCode")
-            return bool(self.session_token and self.org_code)
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.post(
+                    auth_url,
+                    data=auth_data,
+                    headers={"Accept": "application/json"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    self.session_token = data.get("sessionToken")
+                    self.org_code = data.get("tenant", {}).get("orgCode")
+                    return bool(self.session_token and self.org_code)
         except Exception as e:
-            print(f"[T4 Discovery] Authentication error: {e}")
-            return False
+            print(f"[Async T4 Auth Error] {e}")
+        return False
 
-    def _ensure_auth(self, force: bool = False):
-        if force or not self.session_token or not self.org_code:
-            self._authenticate()
+    async def _ensure_auth(self):
+        if not self.session_token or not self.org_code:
+            await self.authenticate()
 
-    def _send_request(self, req: urllib.request.Request, retries: int = 1) -> urllib.response.addinfourl:
-        self._ensure_auth()
+    def _get_headers(self) -> Dict[str, str]:
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
         if self.session_token:
-            req.add_header("sessionToken", str(self.session_token))
-            req.add_header("X-Session-Token", str(self.session_token))
-            
-        try:
-            return self.opener.open(req, timeout=20)
-        except urllib.error.HTTPError as e:
-            if e.code in [401, 403] and retries > 0:
-                print(f"[T4] Received {e.code}, refreshing T4 session & retrying...")
-                self._ensure_auth(force=True)
-                if self.session_token:
-                    req.add_header("sessionToken", str(self.session_token))
-                    req.add_header("X-Session-Token", str(self.session_token))
-                return self.opener.open(req, timeout=20)
-            raise e
+            headers["sessionToken"] = str(self.session_token)
+            headers["X-Session-Token"] = str(self.session_token)
+        return headers
 
-    def list_server_workflows(self) -> List[Dict[str, Any]]:
-        """
-        Dynamically fetches all published workflows from the T4 server.
-        """
+    async def list_server_workflows(self) -> List[Dict[str, Any]]:
+        """Dynamically fetches all published workflows from the T4 server."""
         if self._cached_workflows:
             return self._cached_workflows
 
-        self._ensure_auth()
+        await self._ensure_auth()
         wf_url = f"{self.base_url}/aeengine/rest/tenants/{self.org_code}/workflows"
-        req = urllib.request.Request(wf_url, headers={"Accept": "application/json"})
 
         try:
-            resp = self._send_request(req)
-            self._cached_workflows = json.loads(resp.read().decode("utf-8"))
-            return self._cached_workflows
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.get(wf_url, headers=self._get_headers())
+                if resp.status_code == 200:
+                    self._cached_workflows = resp.json()
+                    return self._cached_workflows
         except Exception as e:
-            print(f"[T4 Discovery] Fetch workflows error: {e}")
-            return []
+            print(f"[Async T4 Discovery] List workflows error: {e}")
+        return []
 
-    def get_workflow_schema(self, workflow_id: int) -> Optional[Dict[str, Any]]:
-        """
-        Dynamically fetches workflow details and parameter schemas for a given workflow ID.
-        """
-        self._ensure_auth()
+    async def get_workflow_schema(self, workflow_id: int) -> Optional[Dict[str, Any]]:
+        """Dynamically fetches workflow details and parameter schemas for a given workflow ID."""
+        await self._ensure_auth()
         wf_url = f"{self.base_url}/aeengine/rest/workflows/{workflow_id}"
-        req = urllib.request.Request(wf_url, headers={"Accept": "application/json"})
 
         try:
-            resp = self._send_request(req)
-            return json.loads(resp.read().decode("utf-8"))
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.get(wf_url, headers=self._get_headers())
+                if resp.status_code == 200:
+                    return resp.json()
         except Exception as e:
-            print(f"[T4 Discovery] Get schema for {workflow_id} error: {e}")
-            return None
+            print(f"[Async T4 Discovery] Schema error for {workflow_id}: {e}")
+        return None
 
-    def find_workflow_by_keywords(self, keywords: List[str]) -> Optional[Dict[str, Any]]:
-        """
-        Dynamically searches for a matching workflow on the T4 server based on keywords.
-        """
-        workflows = self.list_server_workflows()
+    async def find_workflow_by_keywords(self, keywords: List[str]) -> Optional[Dict[str, Any]]:
+        """Dynamically searches for a matching workflow on the T4 server based on keywords."""
+        workflows = await self.list_server_workflows()
         for wf in workflows:
             name_lower = wf.get("name", "").lower()
             if all(kw.lower() in name_lower for kw in keywords):
-                # Fetch full schema with runtimeParameters
-                return self.get_workflow_schema(wf.get("id"))
+                return await self.get_workflow_schema(wf.get("id"))
 
         # Fallback to single keyword match
         for wf in workflows:
             name_lower = wf.get("name", "").lower()
             if any(kw.lower() in name_lower for kw in keywords):
-                return self.get_workflow_schema(wf.get("id"))
+                return await self.get_workflow_schema(wf.get("id"))
 
         return None
 
-    def execute_workflow(
+    async def execute_workflow(
         self,
         workflow_id: int,
         params: Dict[str, Any],
@@ -149,29 +141,23 @@ class T4WorkflowDiscoveryClient:
         source: Optional[str] = None,
         source_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Triggers execution of a workflow on the live AutomationEdge T4 server via /aeengine/rest/execute.
-        All fields are dynamically populated from arguments, discovered schemas, and server authentication.
-        """
-        self._ensure_auth()
+        """Triggers execution of a workflow on the live AutomationEdge T4 server via /aeengine/rest/execute."""
+        await self._ensure_auth()
         exec_url = f"{self.base_url}/aeengine/rest/execute"
-        
-        # If workflow_name is not provided or placeholder, fetch dynamically from schema
+
         if not workflow_name or workflow_name.startswith("Workflow_") or "Discovered tool" in workflow_name:
-            wf_schema = self.get_workflow_schema(workflow_id)
+            wf_schema = await self.get_workflow_schema(workflow_id)
             if wf_schema and wf_schema.get("name"):
                 workflow_name = wf_schema.get("name")
             else:
                 workflow_name = f"Workflow_{workflow_id}"
 
-        # Dynamically assign organization, source, and sourceId
         target_org = org_code or self.org_code or os.getenv("AUTOMATIONEDGE_T4_ORGCODE", "")
-        target_source = source or "Teams_MAF_Bot"
+        target_source = source or "Teams_MAF_Bot_Async"
         target_source_id = source_id or params.get("sourceId") or params.get("source_id") or f"REQ-{int(time.time())}"
 
-        # Format payload parameters dynamically
         param_list = [{"name": str(k), "value": str(v), "type": "String"} for k, v in params.items()]
-        
+
         payload_data = {
             "orgCode": target_org,
             "workflowId": workflow_id,
@@ -180,56 +166,49 @@ class T4WorkflowDiscoveryClient:
             "sourceId": target_source_id,
             "params": param_list
         }
-        
-        print(f"[T4 Execute] Sending execution request to {exec_url} with payload: {json.dumps(payload_data)}")
-        
-        req = urllib.request.Request(
-            exec_url,
-            data=json.dumps(payload_data).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        )
+
+        print(f"[Async T4 Execute] Dispatching payload to {exec_url}: {json.dumps(payload_data)}")
 
         try:
-            resp = self._send_request(req)
-            res_json = json.loads(resp.read().decode("utf-8"))
-            req_id = res_json.get("automationRequestId") or res_json.get("workflowRequestId") or res_json.get("id") or "TRIGGERED"
-            print(f"[T4 Execute] SUCCESS! automationRequestId: {req_id}")
-            return {
-                "success": True,
-                "request_id": req_id,
-                "response": res_json
-            }
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode("utf-8", errors="ignore")
-            print(f"[T4 Execute HTTP Error] {e.code}: {err_body}")
-            return {"success": False, "error": f"HTTP {e.code}: {err_body}"}
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.post(exec_url, json=payload_data, headers=self._get_headers())
+                if resp.status_code in [200, 201, 202]:
+                    res_json = resp.json()
+                    req_id = res_json.get("automationRequestId") or res_json.get("workflowRequestId") or res_json.get("id") or "TRIGGERED"
+                    print(f"[Async T4 Execute] SUCCESS! automationRequestId: {req_id}")
+                    return {
+                        "success": True,
+                        "request_id": req_id,
+                        "response": res_json
+                    }
+                else:
+                    return {"success": False, "error": f"HTTP {resp.status_code}: {resp.text}"}
         except Exception as e:
-            print(f"[T4 Execute Error] {e}")
+            print(f"[Async T4 Execute Error] {e}")
             return {"success": False, "error": str(e)}
 
-    def get_request_status(self, request_id: Any) -> Optional[Dict[str, Any]]:
-        """
-        Queries AutomationEdge T4 for the execution status of a specific request ID.
-        GET /aeengine/rest/requests/{request_id}
-        """
-        self._ensure_auth()
+    async def get_request_status(self, request_id: Any) -> Optional[Dict[str, Any]]:
+        """Queries AutomationEdge T4 for the execution status of a specific request ID."""
+        await self._ensure_auth()
         status_url = f"{self.base_url}/aeengine/rest/requests/{request_id}"
-        req = urllib.request.Request(status_url, headers={"Accept": "application/json"})
         try:
-            resp = self._send_request(req)
-            return json.loads(resp.read().decode("utf-8"))
-        except Exception:
-            # Fallback to workflowRequests endpoint
-            try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.get(status_url, headers=self._get_headers())
+                if resp.status_code == 200:
+                    return resp.json()
+                # Fallback to workflowRequests
                 fallback_url = f"{self.base_url}/aeengine/rest/workflowRequests/{request_id}"
-                req_fb = urllib.request.Request(fallback_url, headers={"Accept": "application/json"})
-                resp_fb = self._send_request(req_fb)
-                return json.loads(resp_fb.read().decode("utf-8"))
-            except Exception:
-                return None
+                resp_fb = await client.get(fallback_url, headers=self._get_headers())
+                if resp_fb.status_code == 200:
+                    return resp_fb.json()
+        except Exception:
+            pass
+        return None
+
+
+# Backward-compatible alias
+class T4WorkflowDiscoveryClient(AsyncT4DiscoveryClient):
+    pass
 
 
 class MAFExecutionPlan:
@@ -260,14 +239,13 @@ class MAFOrchestratorAgent:
     """
     Microsoft Agent Framework (MAF) Orchestrator Agent.
     Dynamically discovers workflows & runtime parameter schemas directly from the T4 server.
-    NOTE: Discovers and maps payloads dynamically without triggering execution on the T4 server.
     """
     def __init__(self):
-        self.discovery_client = T4WorkflowDiscoveryClient()
+        self.discovery_client = AsyncT4DiscoveryClient()
 
-    def evaluate_and_plan(self, ticket: Dict[str, Any]) -> MAFExecutionPlan:
+    async def evaluate_and_plan(self, ticket: Dict[str, Any]) -> MAFExecutionPlan:
         """
-        Stage 4: Read approved ticket, dynamically search for the matching tool on T4 server,
+        Stage 4: Read approved ticket, asynchronously search for the matching tool on T4 server,
         inspect its required runtime parameters, and construct the execution plan.
         """
         req_type = ticket.get("request_type", "")
@@ -305,8 +283,8 @@ class MAFOrchestratorAgent:
             keywords = ["Check System Update"]
             specialized_agent = "Endpoint Diagnostics Agent"
 
-        # 1. Dynamically search for tool on T4 server
-        discovered_wf = self.discovery_client.find_workflow_by_keywords(keywords)
+        # 1. Asynchronously discover matching workflow on T4 server
+        discovered_wf = await self.discovery_client.find_workflow_by_keywords(keywords)
 
         target_wf_id = discovered_wf.get("id") if discovered_wf else None
         target_wf_name = discovered_wf.get("name") if discovered_wf else f"Discovered tool for {keywords}"
@@ -368,9 +346,14 @@ class MAFOrchestratorAgent:
             steps=steps
         )
 
-    async def execute_plan(self, plan: MAFExecutionPlan, simulate_failure: bool = False, raw_ticket: Optional[Dict[str, Any]] = None) -> Tuple[bool, Dict[str, Any], List[str]]:
+    async def execute_plan(
+        self,
+        plan: MAFExecutionPlan,
+        simulate_failure: bool = False,
+        raw_ticket: Optional[Dict[str, Any]] = None
+    ) -> Tuple[bool, Dict[str, Any], List[str]]:
         """
-        Stage 5: Executes the workflow on the live AutomationEdge T4 server.
+        Stage 5: Asynchronously executes the workflow on the live AutomationEdge T4 server.
         """
         telemetry: List[str] = []
         t_start = time.strftime('%H:%M:%S')
@@ -381,7 +364,7 @@ class MAFOrchestratorAgent:
         telemetry.append(f"[{t_start}] [MAF Payload Synthesis] Discovered Parameters: {json.dumps(plan.synthesized_payload)}")
         
         for step in plan.steps:
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.15)
             t_step = time.strftime('%H:%M:%S')
             telemetry.append(f"[{t_step}] [Plan Step] {step}")
 
@@ -412,11 +395,11 @@ class MAFOrchestratorAgent:
 
         t_exec = time.strftime('%H:%M:%S')
         telemetry.append(f"[{t_exec}] [T4 Dispatcher] 🚀 Triggering live execution on T4 Server: '{plan.target_workflow_name}' (ID: {plan.target_workflow_id})...")
-        t4_res = self.discovery_client.execute_workflow(
+        t4_res = await self.discovery_client.execute_workflow(
             workflow_id=plan.target_workflow_id,
             params=plan.synthesized_payload,
             workflow_name=plan.target_workflow_name,
-            source="Teams_MAF_Bot",
+            source="Teams_MAF_Bot_Async",
             source_id=plan.ticket_number or f"REQ-{int(time.time())}",
             org_code=self.discovery_client.org_code
         )
@@ -436,14 +419,14 @@ class MAFOrchestratorAgent:
         req_id = t4_res.get("request_id")
         telemetry.append(f"[{t_exec}] [T4 Server Success] ✅ Workflow dispatched to AutomationEdge T4 worker! Request ID: {req_id}")
 
-        # Verification & Polling Step: Check execution status on T4 server
+        # Verification & Polling Step: Non-blocking asynchronous status polling
         t_poll = time.strftime('%H:%M:%S')
-        telemetry.append(f"[{t_poll}] [Validation Agent] ⏳ Polling T4 Server to verify execution status for Request ID: {req_id}...")
+        telemetry.append(f"[{t_poll}] [Validation Agent] ⏳ Polling T4 Server asynchronously for Request ID: {req_id}...")
         
         final_status = "COMPLETED"
         for poll_attempt in range(1, 4):
-            await asyncio.sleep(1.0)
-            status_data = self.discovery_client.get_request_status(req_id)
+            await asyncio.sleep(0.8)
+            status_data = await self.discovery_client.get_request_status(req_id)
             if status_data:
                 status_str = str(status_data.get("status") or status_data.get("requestStatus") or status_data.get("workflowStatus") or "COMPLETED")
                 t_chk = time.strftime('%H:%M:%S')

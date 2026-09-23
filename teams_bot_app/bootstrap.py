@@ -16,6 +16,7 @@ CRITICAL_PACKAGES = {
     "uvicorn": "uvicorn[standard]>=0.23.0",
     "pydantic": "pydantic>=2.0.0",
     "dotenv": "python-dotenv>=1.0.0",
+    "httpx": "httpx>=0.27.0",
     "requests": "requests>=2.31.0",
 }
 
