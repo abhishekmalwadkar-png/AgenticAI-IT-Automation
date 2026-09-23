@@ -460,7 +460,7 @@ async def chat_endpoint(msg: UserMessage):
         
         ticket_number = snow_res.get("ticket_number") or f"INC{random.randint(1000000, 9999999)}"
         sys_id = snow_res.get("sys_id", "")
-        snow_link = snow_res.get("link", f"{SNOW_URL}/nav_to.do?uri=incident.do")
+        snow_link = snow_res.get("link", f"{get_snow_client().instance_url}/nav_to.do?uri=incident.do")
         
         ticket = {
             "ticket_number": ticket_number,
@@ -482,7 +482,7 @@ async def chat_endpoint(msg: UserMessage):
             "is_live_snow": snow_res.get("success", False),
             "logs": [
                 f"[{time.strftime('%H:%M:%S')}] MAF Triage Agent extracted parameters: Intent='{intent_data['title']}', Role/Item='{slot_value}'.",
-                f"[{time.strftime('%H:%M:%S')}] Descriptive LIVE ServiceNow incident created: {ticket_number} at {SNOW_URL}."
+                f"[{time.strftime('%H:%M:%S')}] Descriptive LIVE ServiceNow incident created: {ticket_number} at {get_snow_client().instance_url}."
             ]
         }
         store.tickets[ticket_number] = ticket
@@ -734,7 +734,8 @@ async def webhook_ticket_created(request: Request):
     intent_key = detect_intent(short_desc) or "account_unlock"
     intent_data = INTENT_CATALOG.get(intent_key, INTENT_CATALOG["account_unlock"])
     
-    snow_link = f"{SNOW_URL}/nav_to.do?uri=incident.do?sys_id={sys_id}" if sys_id else f"{SNOW_URL}/nav_to.do?uri=incident.do"
+    snow_base = get_snow_client().instance_url
+    snow_link = f"{snow_base}/nav_to.do?uri=incident.do?sys_id={sys_id}" if sys_id else f"{snow_base}/nav_to.do?uri=incident.do"
     
     ticket = {
         "ticket_number": str(ticket_number),
