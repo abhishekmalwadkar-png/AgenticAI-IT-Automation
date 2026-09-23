@@ -6,149 +6,296 @@
   <title>Microsoft Teams — AE Bot & IT Service Automation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260923" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260923_v2" />
 </head>
-<body>
-  <div class="app-container">
-    <!-- Top Navigation Bar (Teams Style) -->
-    <header class="teams-topbar">
-      <div class="topbar-left">
-        <div class="teams-grid-icon">⠿</div>
-        <span class="teams-brand">Microsoft Teams</span>
+<body class="teams-dark-theme">
+  <div class="teams-app-window">
+    
+    <!-- 1. OFFICIAL MICROSOFT TEAMS TITLE / TOP BAR -->
+    <header class="teams-titlebar">
+      <div class="titlebar-left">
+        <button class="waffle-btn" title="Microsoft 365 Apps">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+            <circle cx="3" cy="3" r="1.5"/><circle cx="8" cy="3" r="1.5"/><circle cx="13" cy="3" r="1.5"/>
+            <circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/>
+            <circle cx="3" cy="13" r="1.5"/><circle cx="8" cy="13" r="1.5"/><circle cx="13" cy="13" r="1.5"/>
+          </svg>
+        </button>
+        <div class="teams-logo-brand">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <path d="M19.5 7.5a2 2 0 100-4 2 2 0 000 4zM22 13.5v-3.8c0-.9-.7-1.7-1.6-1.7h-1.8c.6.6 1 1.5 1 2.5v3h2.4z" fill="#7B83EB"/>
+            <path d="M14.5 6a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM17.5 16v-6.5c0-1.4-1.1-2.5-2.5-2.5h-5C8.6 7 7.5 8.1 7.5 9.5V16h10z" fill="#5B5FC7"/>
+            <path d="M9 13H3c-.6 0-1 .4-1 1v6c0 .6.4 1 1 1h6c.6 0 1-.4 1-1v-6c0-.6-.4-1-1-1z" fill="#444791"/>
+            <path d="M5 15h2v2H5v-2z" fill="#FFFFFF"/>
+          </svg>
+          <span class="brand-text">Microsoft Teams</span>
+        </div>
       </div>
-      <div class="topbar-search">
-        <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Search (Ctrl+E)" disabled />
+
+      <!-- Center Search Bar (Fluent 2 Style) -->
+      <div class="titlebar-center">
+        <div class="teams-search-box">
+          <svg class="search-svg" viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1.007 1.007 0 00-.115-.1zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/>
+          </svg>
+          <input type="text" placeholder="Search (Ctrl+E)" readonly />
+        </div>
       </div>
-      <div class="topbar-right">
-        <button id="resetBtn" class="btn-secondary-sm" title="Reset Session">🔄 Reset Demo</button>
-        <div class="user-avatar-top" title="Aarav Sharma">AS</div>
+
+      <!-- Right User & Window Controls -->
+      <div class="titlebar-right">
+        <!-- Persona Quick Switcher -->
+        <div class="persona-switch-wrapper">
+          <label for="personaSelect" class="persona-label">Persona:</label>
+          <select id="personaSelect" class="teams-persona-dropdown">
+            <option value="Aarav Sharma (Finance Analyst)">👤 Aarav Sharma (Requester)</option>
+            <option value="Priya Patel (Finance Director)">👑 Priya Patel (Approver)</option>
+          </select>
+        </div>
+
+        <button id="resetBtn" class="teams-icon-btn" title="Reset Session Demo">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+            <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 4.9 4c1.552 0 2.94-.707 3.857-1.818a.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+          </svg>
+          <span>Reset</span>
+        </button>
+
+        <div class="user-profile-badge" id="currentUserBadge" title="Current User">
+          <div class="avatar-circle" id="userAvatarInitials">AS</div>
+          <span class="presence-dot available"></span>
+        </div>
+
+        <!-- Simulated Windows Controls -->
+        <div class="window-controls">
+          <button class="win-btn" title="Minimize">─</button>
+          <button class="win-btn" title="Maximize">▢</button>
+          <button class="win-btn close" title="Close">✕</button>
+        </div>
       </div>
     </header>
 
-    <!-- Main Content Area: Teams Sidebar + Chat/Approvals + Live Console -->
-    <main class="main-layout">
-      <!-- Teams Left App Bar -->
-      <nav class="teams-appbar">
-        <div class="appbar-item active">
-          <div class="appbar-icon">💬</div>
-          <span>Chat</span>
-        </div>
-        <div class="appbar-item">
-          <div class="appbar-icon">👥</div>
-          <span>Teams</span>
-        </div>
-        <div class="appbar-item">
-          <div class="appbar-icon">📅</div>
-          <span>Calendar</span>
-        </div>
-        <div class="appbar-item">
-          <div class="appbar-icon">🔔</div>
-          <span>Activity</span>
-        </div>
+    <!-- 2. MAIN TEAMS APP CONTAINER -->
+    <div class="teams-body">
+      
+      <!-- Left App Navigation Bar (Activity, Chat, Teams, Calendar, Approvals) -->
+      <nav class="teams-rail-nav">
+        <button class="rail-item" title="Activity">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 005 13h14a1 1 0 00.707-1.707L19 10.586V8a6 6 0 00-6-6zm-4 13a4 4 0 008 0H8z"/>
+          </svg>
+          <span class="rail-label">Activity</span>
+          <span class="rail-badge">2</span>
+        </button>
+
+        <button class="rail-item active" title="Chat">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+          </svg>
+          <span class="rail-label">Chat</span>
+        </button>
+
+        <button class="rail-item" title="Teams">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+          </svg>
+          <span class="rail-label">Teams</span>
+        </button>
+
+        <button class="rail-item" title="Approvals" id="railApprovalsBtn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <span class="rail-label">Approvals</span>
+          <span class="rail-badge" id="railApprovalsBadge" style="display:none;">0</span>
+        </button>
+
+        <button class="rail-item" title="Calendar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 002 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+          </svg>
+          <span class="rail-label">Calendar</span>
+        </button>
+
+        <button class="rail-item" title="Apps">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+          </svg>
+          <span class="rail-label">Apps</span>
+        </button>
       </nav>
 
-      <!-- Chat List Panel -->
-      <aside class="chat-list-panel">
-        <div class="chat-list-header">
+      <!-- Left Sidebar: Recent Chats & Channels -->
+      <aside class="teams-chat-list">
+        <div class="chat-list-top">
           <h2>Chat</h2>
-          <span class="chat-filter-icon">⚙️</span>
+          <div class="list-action-icons">
+            <button class="icon-btn" title="Filter"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M1.5 1.5A.5.5 0 012 1h12a.5.5 0 01.4.8l-4.9 5.88V12.5a.5.5 0 01-.2.4l-2 1.5A.5.5 0 016.5 14V7.68L1.6 1.8a.5.5 0 01-.1-.3z"/></svg></button>
+            <button class="icon-btn" title="New Chat"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M15.502 1.94a.5.5 0 010 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 01.707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 00-.121.196l-.805 2.414a.25.25 0 00.316.316l2.414-.805a.5.5 0 00.196-.12l6.812-6.813z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-6a.5.5 0 00-1 0v6a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5H9a.5.5 0 000-1H2.5A1.5 1.5 0 001 2.5v11z"/></svg></button>
+          </div>
         </div>
-        <div class="chat-list-items">
-          <div class="chat-item active">
-            <div class="bot-avatar-badge">
-              <span class="bot-icon">🤖</span>
-              <span class="online-indicator"></span>
+
+        <div class="chat-section-label">Pinned</div>
+
+        <div class="chat-conversations">
+          <!-- Active Conversation: AE Bot -->
+          <div class="conversation-item active" id="chatItemBot">
+            <div class="bot-avatar-container">
+              <div class="bot-circle">🤖</div>
+              <span class="presence-dot available"></span>
             </div>
-            <div class="chat-item-info">
-              <div class="chat-item-name">AE Bot <span class="badge-bot">BOT</span></div>
-              <div class="chat-item-preview" id="sidebarPreview">Ask me for IT services & access...</div>
+            <div class="conv-details">
+              <div class="conv-header">
+                <span class="conv-title">AE Bot <span class="badge-bot-capsule">BOT</span></span>
+                <span class="conv-time" id="lastMsgTime">Just now</span>
+              </div>
+              <div class="conv-preview" id="sidebarPreview">Ask for SAP, Password, DL, or Account Unlock...</div>
             </div>
           </div>
-          <div class="chat-item">
-            <div class="user-avatar-sm">PP</div>
-            <div class="chat-item-info">
-              <div class="chat-item-name">Priya Patel</div>
-              <div class="chat-item-preview">Finance Director (Approver)</div>
+
+          <!-- Pinned Person: Priya Patel -->
+          <div class="conversation-item" id="chatItemPriya">
+            <div class="bot-avatar-container">
+              <div class="avatar-circle">PP</div>
+              <span class="presence-dot busy"></span>
+            </div>
+            <div class="conv-details">
+              <div class="conv-header">
+                <span class="conv-title">Priya Patel</span>
+                <span class="conv-time">10:45 AM</span>
+              </div>
+              <div class="conv-preview">Finance Director (Approver)</div>
+            </div>
+          </div>
+
+          <!-- Pinned Channel: IT Service Desk -->
+          <div class="conversation-item" id="chatItemHelpdesk">
+            <div class="bot-avatar-container">
+              <div class="avatar-circle team-color">IT</div>
+              <span class="presence-dot available"></span>
+            </div>
+            <div class="conv-details">
+              <div class="conv-header">
+                <span class="conv-title">IT Service Desk</span>
+                <span class="conv-time">Yesterday</span>
+              </div>
+              <div class="conv-preview">ServiceNow incident sync & RPA status</div>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Central Teams Bot Window with Tabs -->
-      <section class="teams-chat-window">
-        <!-- Chat Header -->
-        <div class="chat-header">
-          <div class="chat-header-user">
-            <div class="bot-avatar-badge header-avatar">
-              <span class="bot-icon">🤖</span>
-              <span class="online-indicator"></span>
-            </div>
-            <div>
-              <div class="header-name">
-                <strong>AE Bot</strong>
-                <span class="badge-bot">BOT</span>
-                <span class="badge-verified">Verified</span>
+      <!-- Center-Right Main Working Area -->
+      <section class="teams-main-canvas">
+        
+        <!-- Bot Header (Official Microsoft Teams App Header) -->
+        <header class="bot-app-header">
+          <div class="bot-header-left">
+            <div class="bot-header-avatar">🤖</div>
+            <div class="bot-header-titles">
+              <div class="title-row">
+                <h1>AE Bot</h1>
+                <span class="badge-bot-capsule">BOT</span>
+                <span class="badge-verified-check" title="Verified Microsoft Teams Bot">✓ Verified</span>
               </div>
-              <div class="header-status">Autonomous IT Service Assistant (Powered by MAF)</div>
+              <p class="bot-subtitle">Autonomous IT Service Management • Powered by MAF & AutomationEdge RPA</p>
             </div>
           </div>
-          <div class="chat-header-actions">
-            <span class="status-pill">● Online</span>
+          <div class="bot-header-right">
+            <span class="connection-status-pill">
+              <span class="pulse-dot"></span> Live ServiceNow Sync
+            </span>
           </div>
-        </div>
+        </header>
 
-        <!-- Teams Bot Tabs (Chat / Approvals / Policies) -->
-        <nav class="bot-tabs-nav">
-          <button class="bot-tab-btn active" id="tabChatBtn">
-            <span>💬 Chat</span>
+        <!-- Official Microsoft Teams Tab Navigation -->
+        <nav class="teams-tabs-header">
+          <button class="teams-tab active" id="tabChatBtn">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M14 1a1 1 0 011 1v8a1 1 0 01-1 1H4.414A2 2 0 003 11.586l-2 2V2a1 1 0 011-1h12z"/></svg>
+            <span>Chat</span>
           </button>
-          <button class="bot-tab-btn" id="tabApprovalsBtn">
-            <span>📬 Approvals</span>
-            <span class="badge-count" id="approvalsBadge" style="display: none;">0</span>
+          
+          <button class="teams-tab" id="tabApprovalsBtn">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M12.736 3.97a.733.733 0 011.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 01-1.065.02L3.217 8.384a.757.757 0 010-1.06.733.733 0 011.047 0l3.052 3.093 5.4-6.425a.247.247 0 01.02-.022z"/></svg>
+            <span>Approvals</span>
+            <span class="tab-badge" id="approvalsBadge" style="display:none;">0</span>
           </button>
-          <button class="bot-tab-btn" id="tabAboutBtn">
-            <span>ℹ️ Service Catalog</span>
+
+          <button class="teams-tab" id="tabCatalogBtn">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h6.086a1.5 1.5 0 001.06-.44l4.914-4.914A1.5 1.5 0 0015 8.586V2.5A1.5 1.5 0 0013.5 1h-11zM2 2.5a.5.5 0 01.5-.5h11a.5.5 0 01.5.5v6H9.5A1.5 1.5 0 008 10v4.5H2.5a.5.5 0 01-.5-.5v-11z"/></svg>
+            <span>Service Catalog</span>
+          </button>
+
+          <button class="teams-tab" id="tabObservabilityBtn">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 15A7 7 0 118 1a7 7 0 010 14zm0 1A8 8 0 108 0a8 8 0 000 16z"/><path d="M8 4a.5.5 0 01.5.5v3h3a.5.5 0 010 1h-3.5a.5.5 0 01-.5-.5v-4A.5.5 0 018 4z"/></svg>
+            <span>Agent Telemetry & Logs</span>
           </button>
         </nav>
 
-        <!-- TAB 1: Chat View Container -->
-        <div class="tab-view-container active" id="chatTabView">
-          <!-- Messages Flow -->
-          <div class="messages-container" id="messagesContainer">
-            <!-- Welcome Message from Bot -->
-            <div class="message-row bot-row">
+        <!-- TAB 1: CHAT TAB CONTENT -->
+        <div class="tab-content active" id="chatTabView">
+          <div class="chat-scroll-pane" id="messagesContainer">
+            
+            <!-- Date Divider -->
+            <div class="chat-date-divider">
+              <span>Today</span>
+            </div>
+
+            <!-- Initial Welcome Message from Bot -->
+            <div class="message-block bot-block">
               <div class="msg-avatar bot-avatar">🤖</div>
-              <div class="msg-bubble-group">
-                <div class="msg-sender">AE Bot <span class="msg-time" id="welcomeTime">10:00 AM</span></div>
+              <div class="msg-body">
+                <div class="msg-meta">
+                  <span class="msg-author">AE Bot</span>
+                  <span class="badge-bot-capsule">BOT</span>
+                  <span class="msg-timestamp" id="welcomeTime">10:00 AM</span>
+                </div>
                 <div class="msg-bubble bot-bubble">
-                  <p>Hello Aarav! 👋 I'm your <strong>Autonomous IT Service Assistant (AE Bot)</strong>.</p>
-                  <p>I understand natural language requests, extract required details, and create tickets in ServiceNow automatically.</p>
-                  <p><strong>Supported Requests:</strong></p>
-                  <div class="quick-chips" id="quickChips">
-                    <button class="chip" data-prompt="I need SAP access for Finance team">🏢 SAP Finance Access</button>
-                    <button class="chip" data-prompt="My account is locked, please unlock my AD account">🔓 Unlock AD Account</button>
-                    <button class="chip" data-prompt="I forgot my password, please reset my password">🔐 Password Reset</button>
-                    <button class="chip" data-prompt="Create a distribution list for Project Titan Core">✉️ Create M365 DL</button>
-                    <button class="chip" data-prompt="I need software installation and license">💻 Software Installation</button>
+                  <p>Hello! I am your <strong>Autonomous IT Service Assistant (AE Bot)</strong>.</p>
+                  <p>I can instantly process your IT access, reset credentials, or register ServiceNow incidents with automated RPA fulfillment.</p>
+                  
+                  <div class="quick-prompt-chips" id="quickChips">
+                    <button class="teams-chip" data-prompt="I need SAP access for Finance team">🏢 SAP Finance Access</button>
+                    <button class="teams-chip" data-prompt="My account is locked, please unlock my AD account">🔓 Unlock AD Account</button>
+                    <button class="teams-chip" data-prompt="I forgot my password, please reset my password">🔑 Password Reset</button>
+                    <button class="teams-chip" data-prompt="Create a distribution list for Project Titan Core">✉️ Create M365 DL</button>
+                    <button class="teams-chip" data-prompt="I need software installation and license">💻 Software Installation</button>
                   </div>
                 </div>
               </div>
             </div>
+
           </div>
 
-          <!-- Dynamic Typing Indicator -->
-          <div class="typing-indicator" id="typingIndicator" style="display: none;">
-            <span>AE Bot is typing...</span>
-            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <!-- Typing Indicator -->
+          <div class="teams-typing-bar" id="typingIndicator" style="display:none;">
+            <div class="typing-avatar">🤖</div>
+            <span>AE Bot is typing</span>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
           </div>
 
-          <!-- Chat Input Form -->
-          <div class="chat-input-area">
-            <form id="chatForm" class="chat-form">
-              <input type="text" id="userInput" placeholder="Type your IT request to AE Bot (e.g. 'I need SAP access for Finance team')..." autocomplete="off" />
-              <button type="submit" id="sendBtn" class="btn-send" title="Send Message">
+          <!-- Teams Compose Box -->
+          <div class="teams-compose-box">
+            <!-- Format bar -->
+            <div class="compose-toolbar">
+              <button class="toolbar-btn" title="Format"><b>B</b></button>
+              <button class="toolbar-btn" title="Italic"><i>I</i></button>
+              <button class="toolbar-btn" title="Attach file">📎</button>
+              <button class="toolbar-btn" title="Emoji">😊</button>
+              <button class="toolbar-btn" title="GIF">GIF</button>
+              <button class="toolbar-btn" title="Stickers">🎨</button>
+            </div>
+
+            <!-- Input area -->
+            <form id="chatForm" class="compose-input-row">
+              <input 
+                type="text" 
+                id="userInput" 
+                placeholder="Type a message to AE Bot (e.g., 'Reset my password', 'Unlock my account', 'Need SAP access')..." 
+                autocomplete="off" 
+              />
+              <button type="submit" id="sendBtn" class="send-message-btn" title="Send message">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
@@ -157,94 +304,125 @@
           </div>
         </div>
 
-        <!-- TAB 2: Approvals View Container -->
-        <div class="tab-view-container" id="approvalsTabView" style="display: none;">
-          <div class="approvals-header">
-            <h3>📬 Pending & Recent Approvals (Microsoft Teams Approvals Hub)</h3>
-            <p>Approvals triggered for privileged ServiceNow incidents requiring Line Manager / Owner sign-off.</p>
-          </div>
-          <div class="approvals-list" id="approvalsList">
-            <div class="no-approvals" id="noApprovalsMsg">
-              <div style="font-size:32px; margin-bottom:8px;">📭</div>
-              <strong>No pending approval requests</strong>
-              <p>When you submit a request requiring governance (like SAP Access or Distribution Lists), approval cards with the Incident ID will appear here.</p>
+        <!-- TAB 2: APPROVALS TAB CONTENT (Microsoft Teams Approvals App Template) -->
+        <div class="tab-content" id="approvalsTabView" style="display:none;">
+          <div class="approvals-dashboard">
+            <div class="approvals-top-banner">
+              <div>
+                <h2>Approvals Hub</h2>
+                <p>Manage pending authorization requests for privileged IT access and software licenses.</p>
+              </div>
+              <div class="approval-filter-pills">
+                <button class="filter-pill active">All Requests</button>
+                <button class="filter-pill">Pending</button>
+                <button class="filter-pill">Approved</button>
+              </div>
+            </div>
+
+            <div class="approvals-cards-grid" id="approvalsList">
+              <div class="no-approvals-card" id="noApprovalsMsg">
+                <div class="empty-icon">📬</div>
+                <h3>No pending approvals</h3>
+                <p>When you submit a request requiring management sign-off (such as SAP Access or Distribution Lists), interactive Teams approval cards will appear here.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- TAB 3: About / Service Catalog View -->
-        <div class="tab-view-container" id="aboutTabView" style="display: none;">
-          <div class="catalog-view">
-            <h3>📋 Automated IT Service Catalog</h3>
-            <p style="font-size:12px; color:#616161; margin-bottom:14px;">Powered by Microsoft Agent Framework (MAF) Orchestrator.</p>
-            <div class="catalog-grid">
-              <div class="catalog-card">
-                <h4>🏢 SAP Access Provisioning</h4>
-                <p>Role assignments in SAP S/4HANA Finance & Controlling. Requires Line Manager Approval.</p>
+        <!-- TAB 3: SERVICE CATALOG TAB CONTENT -->
+        <div class="tab-content" id="catalogTabView" style="display:none;">
+          <div class="catalog-container">
+            <div class="catalog-header">
+              <h2>IT Service Catalog</h2>
+              <p>Explore automated self-service offerings fulfilled via AutomationEdge RPA & ServiceNow.</p>
+            </div>
+            <div class="catalog-cards">
+              <div class="catalog-item-card" data-prompt="I need SAP access for Finance team">
+                <div class="item-icon">🏢</div>
+                <h3>SAP S/4HANA Role Access</h3>
+                <p>Assigns general ledger and finance controlling authorizations via SAP GUI RPA (SU01).</p>
+                <span class="policy-tag approval">Requires Approval</span>
               </div>
-              <div class="catalog-card">
-                <h4>🔓 Account Unlock</h4>
-                <p>Clears lockoutTime in Active Directory & Entra ID. Zero-touch policy auto-approved.</p>
+              <div class="catalog-item-card" data-prompt="My account is locked, please unlock my AD account">
+                <div class="item-icon">🔓</div>
+                <h3>Active Directory Account Unlock</h3>
+                <p>Instantly unlocks locked Windows/AD accounts with automated identity verification.</p>
+                <span class="policy-tag auto">Auto-Approved</span>
               </div>
-              <div class="catalog-card">
-                <h4>🔐 Self-Service Password Reset</h4>
-                <p>Generates secure temporary password with MFA challenge. Policy auto-approved.</p>
+              <div class="catalog-item-card" data-prompt="I forgot my password, please reset my password">
+                <div class="item-icon">🔑</div>
+                <h3>Self-Service Password Reset</h3>
+                <p>Generates a temporary secure password with MFA compliance validation.</p>
+                <span class="policy-tag auto">Auto-Approved</span>
               </div>
-              <div class="catalog-card">
-                <h4>✉️ Distribution List Management</h4>
-                <p>Exchange Online & M365 Mail-Enabled Security Groups. Requires Owner approval.</p>
+              <div class="catalog-item-card" data-prompt="Create a distribution list for Project Titan Core">
+                <div class="item-icon">✉️</div>
+                <h3>M365 Distribution List Creation</h3>
+                <p>Creates mail-enabled distribution lists and security groups in Exchange Online.</p>
+                <span class="policy-tag approval">Requires Approval</span>
               </div>
-              <div class="catalog-card">
-                <h4>💻 Software & Licenses</h4>
-                <p>Intune Endpoint Package assignment and cloud license allocation. Requires approval.</p>
+              <div class="catalog-item-card" data-prompt="I need software installation and license">
+                <div class="item-icon">💻</div>
+                <h3>Software License & Endpoint Deployment</h3>
+                <p>Provisions enterprise software packages via Microsoft Intune and License Portals.</p>
+                <span class="policy-tag approval">Requires Approval</span>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- TAB 4: MAF REASONING & OBSERVABILITY TAB CONTENT -->
+        <div class="tab-content" id="observabilityTabView" style="display:none;">
+          <div class="observability-dashboard">
+            <div class="obs-header">
+              <h2>Agent Reasoning & IT Operations Telemetry</h2>
+              <p>Real-time execution telemetry from Microsoft Agent Framework (MAF) and AutomationEdge T4 RPA.</p>
+            </div>
+            
+            <div class="obs-grid">
+              <!-- Active ServiceNow Ticket Widget -->
+              <div class="obs-card">
+                <div class="card-header">
+                  <h3>ServiceNow Live Incident</h3>
+                  <span id="ticketBadge" class="badge-status badge-neutral">No Active Ticket</span>
+                </div>
+                <div id="ticketDetailsCard" class="snow-details-box">
+                  <p class="empty-text">Submit a query in Teams Chat to generate a live ServiceNow ticket...</p>
+                </div>
+              </div>
+
+              <!-- 6-Stage Lifecycle -->
+              <div class="obs-card">
+                <div class="card-header">
+                  <h3>6-Stage Fulfillment Lifecycle</h3>
+                </div>
+                <div class="lifecycle-track" id="lifecycleSteps">
+                  <div class="stage-step" id="step1"><span class="num">1</span> End User Query</div>
+                  <div class="stage-step" id="step2"><span class="num">2</span> Triage & SNOW Ticket</div>
+                  <div class="stage-step" id="step3"><span class="num">3</span> Teams Approval</div>
+                  <div class="stage-step" id="step4"><span class="num">4</span> MAF Agent Planning</div>
+                  <div class="stage-step" id="step5"><span class="num">5</span> T4 RPA Execution</div>
+                  <div class="stage-step" id="step6"><span class="num">6</span> Validation & Closure</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemetry Stream Logs -->
+            <div class="obs-card full-width">
+              <div class="card-header">
+                <h3>Live Orchestration Event Stream</h3>
+              </div>
+              <div class="telemetry-terminal" id="telemetryLogs">
+                <div class="log-entry info">[System] Agentic AI IT Service Automation server initialized.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </section>
-
-      <!-- Right Panel: Live IT Ops & MAF Observability Dashboard -->
-      <aside class="observability-panel">
-        <div class="panel-header">
-          <h3>⚡ MAF Agent & IT Ops Console</h3>
-          <span class="live-tag">LIVE</span>
-        </div>
-
-        <!-- Active ServiceNow Ticket Widget -->
-        <div class="console-section">
-          <div class="section-title">
-            <span>📑 Active ServiceNow Ticket</span>
-            <span id="ticketBadge" class="badge-status badge-neutral">No Active Ticket</span>
-          </div>
-          <div id="ticketDetailsCard" class="snow-card empty-card">
-            <p class="placeholder-text">Submit a request in Teams to create a live incident...</p>
-          </div>
-        </div>
-
-        <!-- 6-Stage Progress Indicator -->
-        <div class="console-section">
-          <div class="section-title"><span>🔄 6-Stage Fulfillment Lifecycle</span></div>
-          <div class="lifecycle-steps" id="lifecycleSteps">
-            <div class="step-item" id="step1"><span class="step-num">1</span> End User Request</div>
-            <div class="step-item" id="step2"><span class="step-num">2</span> Triage & SNOW Ticket</div>
-            <div class="step-item" id="step3"><span class="step-num">3</span> Teams Approval Tab</div>
-            <div class="step-item" id="step4"><span class="step-num">4</span> MAF Orchestration</div>
-            <div class="step-item" id="step5"><span class="step-num">5</span> Tool / RPA Execution</div>
-            <div class="step-item" id="step6"><span class="step-num">6</span> Validation & Closure</div>
-          </div>
-        </div>
-
-        <!-- Live MAF Orchestration Reasoning Stream -->
-        <div class="console-section flex-grow">
-          <div class="section-title"><span>🧠 MAF Agent Reasoning & Tool Telemetry</span></div>
-          <div class="telemetry-logs" id="telemetryLogs">
-            <div class="log-entry info">[System] MAF Agent initialized with ServiceNow live connection.</div>
-          </div>
-        </div>
-      </aside>
-    </main>
+    </div>
   </div>
 
-  <script src="app.js?v=20260923"></script>
+  <script src="app.js?v=20260923_v2"></script>
 </body>
 </html>

@@ -914,5 +914,7 @@ async def reset_state():
     store.reset()
     return JSONResponse({"status": "reset"})
 
-# Mount static files
-app.mount("/", StaticFiles(directory="d:/Agentic_AI-IT_service_automation/teams_bot_app/static", html=True), name="static")
+# Mount static files dynamically
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
