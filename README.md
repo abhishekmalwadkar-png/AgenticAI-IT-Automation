@@ -118,10 +118,6 @@ SERVICENOW_INSTANCE_URL=https://your-instance.service-now.com/
 SERVICENOW_USER=your_servicenow_username
 SERVICENOW_PASSWORD=your_servicenow_password
 
-# (Optional) ServiceNow OAuth 2.0 Credentials
-SERVICENOW_CLIENT_ID=your_oauth_client_id
-SERVICENOW_CLIENT_SECRET=your_oauth_client_secret
-
 # AutomationEdge (T4) RPA Server Configuration
 AUTOMATIONEDGE_T4_URL=https://t4.automationedge.com
 AUTOMATIONEDGE_T4_USER=your_email@company.com
