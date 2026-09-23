@@ -3,7 +3,7 @@ import asyncio
 import json
 import random
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,13 +26,34 @@ def load_env(env_path: Optional[str] = None):
                     k, v = line.split("=", 1)
                     os.environ[k.strip()] = v.strip()
 
-load_env()
+_cached_snow_client: Optional[ServiceNowLiveClient] = None
+_cached_creds_tuple: Optional[Tuple[str, str, str, Optional[str], Optional[str]]] = None
 
-SNOW_URL = os.getenv("SERVICENOW_INSTANCE_URL", "").rstrip("/")
-SNOW_USER = os.getenv("SERVICENOW_USER", "")
-SNOW_PWD = os.getenv("SERVICENOW_PASSWORD", "")
-
-snow_client = ServiceNowLiveClient(SNOW_URL, SNOW_USER, SNOW_PWD)
+def get_snow_client() -> ServiceNowLiveClient:
+    """
+    Dynamically reloads .env on each invocation and returns an authenticated
+    ServiceNowLiveClient configured with the latest credentials.
+    """
+    global _cached_snow_client, _cached_creds_tuple
+    load_env()
+    url = os.getenv("SERVICENOW_INSTANCE_URL", "").rstrip("/")
+    user = os.getenv("SERVICENOW_USER", "")
+    pwd = os.getenv("SERVICENOW_PASSWORD", "")
+    client_id = os.getenv("SERVICENOW_CLIENT_ID")
+    client_secret = os.getenv("SERVICENOW_CLIENT_SECRET")
+    
+    current_creds = (url, user, pwd, client_id, client_secret)
+    if _cached_snow_client is None or _cached_creds_tuple != current_creds:
+        _cached_creds_tuple = current_creds
+        print(f"[ServiceNow Config] Reloading ServiceNow client with instance: {url} (user: {user})")
+        _cached_snow_client = ServiceNowLiveClient(
+            instance_url=url,
+            username=user,
+            password=pwd,
+            client_id=client_id,
+            client_secret=client_secret
+        )
+    return _cached_snow_client
 
 # In-Memory Session Store
 class TicketStore:
@@ -356,7 +377,7 @@ async def chat_endpoint(msg: UserMessage):
         urgency_info = detect_urgency_and_impact(f"{reason} {soft_name}", intent_key="software_license")
         prefix = f"[{urgency_info['priority_label'].upper()}] " if urgency_info['priority'] <= 2 else ""
 
-        snow_res = snow_client.create_incident(
+        snow_res = get_snow_client().create_incident(
             short_description=f"{prefix}[AE Bot] Software Request: {soft_name} {version} for {username}",
             description="\n".join(snow_desc_lines),
             category="software",
@@ -369,7 +390,7 @@ async def chat_endpoint(msg: UserMessage):
         
         ticket_number = snow_res.get("ticket_number") or f"INC{random.randint(1000000, 9999999)}"
         sys_id = snow_res.get("sys_id", "")
-        snow_link = snow_res.get("link", f"{SNOW_URL}/nav_to.do?uri=incident.do")
+        snow_link = snow_res.get("link", f"{get_snow_client().instance_url}/nav_to.do?uri=incident.do")
         
         ticket = {
             "ticket_number": ticket_number,
@@ -391,7 +412,7 @@ async def chat_endpoint(msg: UserMessage):
             "is_live_snow": snow_res.get("success", False),
             "logs": [
                 f"[{time.strftime('%H:%M:%S')}] MAF Form Intake: Collected Software='{soft_name}', Version='{version}', Target User='{username}', Reason='{reason}'.",
-                f"[{time.strftime('%H:%M:%S')}] Live ServiceNow incident created: {ticket_number} at {SNOW_URL}."
+                f"[{time.strftime('%H:%M:%S')}] Live ServiceNow incident created: {ticket_number} at {get_snow_client().instance_url}."
             ]
         }
         store.tickets[ticket_number] = ticket
@@ -426,7 +447,7 @@ async def chat_endpoint(msg: UserMessage):
             urgency_info=urgency_info
         )
         
-        snow_res = snow_client.create_incident(
+        snow_res = get_snow_client().create_incident(
             short_description=snow_payload["short_description"],
             description=snow_payload["description"],
             category=intent_data["category"],
@@ -543,7 +564,7 @@ async def chat_endpoint(msg: UserMessage):
         urgency_info=urgency_info
     )
 
-    snow_res = snow_client.create_incident(
+    snow_res = get_snow_client().create_incident(
         short_description=snow_payload["short_description"],
         description=snow_payload["description"],
         category=intent_data["category"],
@@ -556,7 +577,7 @@ async def chat_endpoint(msg: UserMessage):
     
     ticket_number = snow_res.get("ticket_number") or f"INC{random.randint(1000000, 9999999)}"
     sys_id = snow_res.get("sys_id", "")
-    snow_link = snow_res.get("link", f"{SNOW_URL}/nav_to.do?uri=incident.do")
+    snow_link = snow_res.get("link", f"{get_snow_client().instance_url}/nav_to.do?uri=incident.do")
 
     ticket = {
         "ticket_number": ticket_number,
@@ -578,7 +599,7 @@ async def chat_endpoint(msg: UserMessage):
         "is_live_snow": snow_res.get("success", False),
         "logs": [
             f"[{time.strftime('%H:%M:%S')}] MAF Triage Agent extracted intent: '{intent_data['title']}'.",
-            f"[{time.strftime('%H:%M:%S')}] Descriptive LIVE ServiceNow incident created: {ticket_number} at {SNOW_URL}."
+            f"[{time.strftime('%H:%M:%S')}] Descriptive LIVE ServiceNow incident created: {ticket_number} at {get_snow_client().instance_url}."
         ]
     }
     store.tickets[ticket_number] = ticket
@@ -600,7 +621,7 @@ async def approval_endpoint(payload: ApprovalAction):
     ticket_id = payload.ticket_id
     if ticket_id not in store.tickets:
         # Try fetching from live ServiceNow
-        snow_inc = snow_client.get_incident_by_number(ticket_id)
+        snow_inc = get_snow_client().get_incident_by_number(ticket_id)
         if snow_inc:
             store.tickets[ticket_id] = {
                 "ticket_number": ticket_id,
@@ -618,7 +639,7 @@ async def approval_endpoint(payload: ApprovalAction):
                 "tool": "AutomationEdge T4 Agent",
                 "created_at": time.strftime("%H:%M:%S"),
                 "resolution_details": "Automated fulfillment via AutomationEdge T4",
-                "snow_link": f"{SNOW_URL}/nav_to.do?uri=incident.do?sys_id={snow_inc.get('sys_id')}",
+                "snow_link": f"{get_snow_client().instance_url}/nav_to.do?uri=incident.do?sys_id={snow_inc.get('sys_id')}",
                 "is_live_snow": True,
                 "logs": [f"[{time.strftime('%H:%M:%S')}] Ticket {ticket_id} loaded from live ServiceNow."]
             }
@@ -638,7 +659,7 @@ async def approval_endpoint(payload: ApprovalAction):
         
         # Update live ServiceNow ticket work notes & activity journal
         if sys_id:
-            snow_client.update_work_notes(sys_id, approval_note, customer_visible=True)
+            get_snow_client().update_work_notes(sys_id, approval_note, customer_visible=True)
         
         return JSONResponse({
             "status": "Approved",
@@ -651,7 +672,7 @@ async def approval_endpoint(payload: ApprovalAction):
         utc_now = time.strftime('%Y-%m-%d %H:%M:%S UTC')
         rejection_note = f"Rejected by: {payload.approver}\nAction: Rejected via Microsoft Teams Adaptive Card\nTimestamp: {utc_now}\nStatus: Closed / Rejected"
         if sys_id:
-            snow_client.update_work_notes(sys_id, rejection_note, state="8", customer_visible=True)
+            get_snow_client().update_work_notes(sys_id, rejection_note, state="8", customer_visible=True)
         ticket["logs"].append(f"[{t_now}] Request REJECTED by {payload.approver}.")
         ticket["logs"].append(f"[{t_now}] Live ServiceNow ticket note updated: 'Rejected by: {payload.approver}'")
         return JSONResponse({
@@ -661,7 +682,7 @@ async def approval_endpoint(payload: ApprovalAction):
         })
     else:
         if sys_id:
-            snow_client.update_work_notes(sys_id, f"Clarification requested by {payload.approver} in Microsoft Teams.")
+            get_snow_client().update_work_notes(sys_id, f"Clarification requested by {payload.approver} in Microsoft Teams.")
         ticket["logs"].append(f"[{time.strftime('%H:%M:%S')}] Clarification requested by {payload.approver}.")
         return JSONResponse({
             "status": "Info Requested",
@@ -755,7 +776,7 @@ maf_orchestrator = MAFOrchestratorAgent()
 @app.post("/api/fulfill/{ticket_id}")
 async def fulfill_endpoint(ticket_id: str, request: Request):
     if ticket_id not in store.tickets:
-        snow_inc = snow_client.get_incident_by_number(ticket_id)
+        snow_inc = get_snow_client().get_incident_by_number(ticket_id)
         if snow_inc:
             store.tickets[ticket_id] = {
                 "ticket_number": ticket_id,
@@ -773,7 +794,7 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
                 "tool": "AutomationEdge T4 Agent",
                 "created_at": time.strftime("%H:%M:%S"),
                 "resolution_details": "Automated fulfillment via AutomationEdge T4",
-                "snow_link": f"{SNOW_URL}/nav_to.do?uri=incident.do?sys_id={snow_inc.get('sys_id')}",
+                "snow_link": f"{get_snow_client().instance_url}/nav_to.do?uri=incident.do?sys_id={snow_inc.get('sys_id')}",
                 "is_live_snow": True,
                 "logs": [f"[{time.strftime('%H:%M:%S')}] Ticket {ticket_id} loaded from live ServiceNow."]
             }
@@ -806,7 +827,7 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
         ticket["status"] = "Resolved"
         resolution_msg = f"Successfully validated and fulfilled via AutomationEdge T4 workflow '{plan.target_workflow_name}' (ID: {plan.target_workflow_id})."
         if sys_id:
-            snow_client.close_incident(sys_id, resolution_msg)
+            get_snow_client().close_incident(sys_id, resolution_msg)
             ticket["logs"].append(f"[{time.strftime('%H:%M:%S')}] ServiceNow incident {ticket_id} state changed to 6 (Resolved).")
 
         completion_card = {
@@ -834,7 +855,7 @@ async def fulfill_endpoint(ticket_id: str, request: Request):
         ticket["status"] = "Escalated to Tier-2 Support"
         escalation_notes = f"MAF Automated fulfillment halted: {result_data.get('reason')}. Reassigned to {result_data.get('assigned_to')}."
         if sys_id:
-            snow_client.update_work_notes(sys_id, f"[MAF Tier-2 Escalation] {escalation_notes}")
+            get_snow_client().update_work_notes(sys_id, f"[MAF Tier-2 Escalation] {escalation_notes}")
 
         return JSONResponse({
             "success": False,
