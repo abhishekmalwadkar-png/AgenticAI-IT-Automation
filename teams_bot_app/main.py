@@ -1,4 +1,6 @@
+import teams_bot_app.bootstrap
 import os
+import sys
 import asyncio
 import json
 import random
@@ -11,7 +13,37 @@ from pydantic import BaseModel
 
 from teams_bot_app.servicenow_client import ServiceNowLiveClient
 
-app = FastAPI(title="Teams AE Bot - IT Service Automation Simulator")
+START_TIME = time.time()
+app = FastAPI(
+    title="Teams AE Bot - IT Service Automation Simulator",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc"
+)
+
+@app.get("/health")
+@app.get("/api/health")
+async def health_check():
+    """
+    Production health probe endpoint. Returns service uptime, environment status,
+    and connectivity health.
+    """
+    uptime_seconds = int(time.time() - START_TIME)
+    snow_configured = bool(os.getenv("SERVICENOW_INSTANCE_URL") and os.getenv("SERVICENOW_USER"))
+    t4_configured = bool(os.getenv("AUTOMATIONEDGE_T4_URL") and os.getenv("AUTOMATIONEDGE_T4_USER"))
+    
+    return JSONResponse({
+        "status": "healthy",
+        "service": "Agentic_AI_Teams_Bot",
+        "version": "2.0.0",
+        "uptime_seconds": uptime_seconds,
+        "environment": {
+            "python_version": sys.version.split()[0],
+            "servicenow_configured": snow_configured,
+            "automationedge_t4_configured": t4_configured,
+            "llm_model": os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
+        }
+    })
 
 # Load environment variables
 def load_env(env_path: Optional[str] = None):

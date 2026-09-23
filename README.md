@@ -132,14 +132,28 @@ GEMINI_MODEL=gemini-3.7-flash
 APP_BASE_URL=http://127.0.0.1:8000
 ```
 
-### 4. Run the Application
-Run via the batch script:
+### 4. Run the Application in Production
+
+#### Option A: Windows (Automatic Self-Healing Runner)
 ```cmd
 run_teams_bot.bat
 ```
-Or directly with Uvicorn:
+*(Automatically verifies Python, auto-installs missing dependencies from requirements.txt, and starts the server).*
+
+#### Option B: Linux / macOS
 ```bash
-uvicorn teams_bot_app.main:app --host 127.0.0.1 --port 8000 --reload
+chmod +x start.sh
+./start.sh
+```
+
+#### Option C: Docker & Docker Compose (Recommended for Enterprise Clouds)
+```bash
+docker-compose up -d --build
+```
+
+#### Option D: Manual Uvicorn Command
+```bash
+uvicorn teams_bot_app.main:app --host 0.0.0.0 --port 8000 --workers 2
 ```
 
 Open your browser and navigate to:
@@ -147,20 +161,31 @@ Open your browser and navigate to:
 
 ---
 
-## Example Test Queries
-
-* **Password Reset**: *"I forgot my password, can you reset it?"*
-* **High Priority / SLA Test**: *"URGENT: Production server down, reset my admin password immediately!"*
-* **Account Unlock**: *"My account is locked out, please unlock it."*
-* **Distribution List**: *"I need to create a new distribution list for the Finance team."*
-* **Software Request**: *"I need access to SAP ERP system."*
+## Health Check & Monitoring
+The application includes a production-ready health probe for load balancers and Kubernetes:
+* **Endpoint**: `http://127.0.0.1:8000/health`
+* **Response**:
+```json
+{
+  "status": "healthy",
+  "service": "Agentic_AI_Teams_Bot",
+  "version": "2.0.0",
+  "uptime_seconds": 120,
+  "environment": {
+    "python_version": "3.11.x",
+    "servicenow_configured": true,
+    "automationedge_t4_configured": true,
+    "llm_model": "gemini-3.7-flash"
+  }
+}
+```
 
 ---
 
-## Security Best Practices
-* Credentials and API keys are managed securely via `.env` (which is excluded via `.gitignore`).
-* Dedicated integration user (`ae_integration`) with `Web service access only` is used for ServiceNow communication.
-* Secure token handling and dynamic endpoint resolution across all RPA calls.
+## Production Reliability & Self-Healing
+* **Dynamic Dependency Auto-Installer**: On startup, `bootstrap.py` checks all required packages and automatically installs missing libraries on-the-fly without crashing.
+* **Non-Blocking Resilience**: If optional extended packages encounter environmental limits, the application falls back gracefully to structured heuristic agent planning.
+* **On-Demand Configuration Reloading**: Changes to `.env` (ServiceNow URL, user, password) are loaded on-the-fly with zero downtime.
 
 ---
 
