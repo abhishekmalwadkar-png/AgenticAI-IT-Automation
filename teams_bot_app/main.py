@@ -451,7 +451,7 @@ async def chat_endpoint(msg: UserMessage):
         store.current_flow = {"intent_key": "software_license", "ticket_id": ticket_number, "awaiting_slot": False}
         
         bot_reply = f"Got it! I've created request **{ticket_number}** in ServiceNow for **{soft_name} ({version})** for user **{username}**."
-        bot_reply += f"\n\n📬 *An approval request with Incident ID **{ticket_number}** has been sent to the **Approvals** tab for Line Manager authorization.*"
+        bot_reply += f"\n\n🔔 *An approval request for Incident ID **{ticket_number}** has been sent to your **Activity Bell (🔔) & Approvals Hub**.*"
         
         return JSONResponse({
             "reply": bot_reply,
@@ -522,7 +522,7 @@ async def chat_endpoint(msg: UserMessage):
 
         bot_reply = f"Got it! I've created request **{ticket_number}** in ServiceNow for **{slot_value}** and will keep you updated here."
         if intent_data["requires_approval"]:
-            bot_reply += f"\n\n📬 *An approval request with Incident ID **{ticket_number}** has been sent to the **Approvals** tab for Line Manager authorization.*"
+            bot_reply += f"\n\n🔔 *An approval request for Incident ID **{ticket_number}** has been sent to your **Activity Bell (🔔) & Approvals Hub**.*"
             
         return JSONResponse({
             "reply": bot_reply,
@@ -639,7 +639,7 @@ async def chat_endpoint(msg: UserMessage):
 
     bot_reply = f"Got it! I've created request **{ticket_number}** in ServiceNow for **{intent_data['title']}**."
     if intent_data["requires_approval"]:
-        bot_reply += f"\n\n📬 *An approval request with Incident ID **{ticket_number}** has been sent to the **Approvals** tab for Line Manager authorization.*"
+        bot_reply += f"\n\n🔔 *An approval request for Incident ID **{ticket_number}** has been sent to your **Activity Bell (🔔) & Approvals Hub**.*"
         
     return JSONResponse({
         "reply": bot_reply,

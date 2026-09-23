@@ -231,6 +231,150 @@ body.teams-dark-theme {
   color: #fff;
 }
 
+/* Activity Bell & Notification Flyout */
+.activity-bell-wrapper {
+  position: relative;
+}
+.bell-btn {
+  position: relative;
+  padding: 6px 10px;
+}
+.bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #C4314B;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 8px rgba(196, 49, 75, 0.8);
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.activity-flyout {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: 360px;
+  background-color: var(--teams-bg-card);
+  border: 1px solid var(--teams-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+  z-index: 1000;
+  overflow: hidden;
+  animation: flyoutSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes flyoutSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #242424;
+  border-bottom: 1px solid var(--teams-border-subtle);
+}
+.flyout-header h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.flyout-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teams-brand-active);
+  background-color: var(--teams-brand-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+.flyout-list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.empty-flyout {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--teams-text-muted);
+  font-size: 12px;
+}
+
+.flyout-item {
+  background-color: #1F1F1F;
+  border: 1px solid var(--teams-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  transition: all 0.15s ease;
+}
+.flyout-item.unread {
+  border-left: 3px solid var(--teams-brand);
+  background-color: rgba(91, 95, 199, 0.08);
+}
+.flyout-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.flyout-item-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.flyout-item-time {
+  font-size: 10px;
+  color: var(--teams-text-muted);
+}
+.flyout-item-desc {
+  font-size: 11px;
+  color: var(--teams-text-secondary);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+.flyout-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.flyout-btn-approve {
+  background-color: var(--teams-brand);
+  border: none;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.flyout-btn-approve:hover {
+  background-color: var(--teams-brand-hover);
+}
+.flyout-btn-reject {
+  background: transparent;
+  border: 1px solid var(--status-busy);
+  color: #FF6B81;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.flyout-btn-reject:hover {
+  background-color: rgba(196, 49, 75, 0.15);
+}
+
 .user-profile-badge {
   position: relative;
   cursor: pointer;
@@ -491,6 +635,146 @@ body.teams-dark-theme {
   background-color: rgba(16, 124, 65, 0.15);
   padding: 2px 6px;
   border-radius: var(--radius-full);
+}
+.badge-approval-tag {
+  background-color: #C4314B;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+.approval-icon-bg {
+  background: linear-gradient(135deg, #F7A800, #C4314B) !important;
+}
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--teams-brand-active);
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--teams-brand-active);
+}
+.conversation-item.highlight-approval {
+  background-color: rgba(247, 168, 0, 0.08);
+  border: 1px dashed rgba(247, 168, 0, 0.4);
+}
+.conversation-item.highlight-approval:hover {
+  background-color: rgba(247, 168, 0, 0.15);
+}
+
+/* In-Chat Approval Adaptive Card (Official Teams Pattern) */
+.in-chat-approval-card {
+  background: linear-gradient(180deg, #2A2A2A 0%, #222222 100%);
+  border: 1px solid var(--teams-border);
+  border-left: 4px solid #F7A800;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow-elevated);
+}
+.in-chat-approval-card.approved {
+  border-left-color: #107C41;
+}
+.in-chat-approval-card.rejected {
+  border-left-color: #C4314B;
+}
+
+.in-chat-approval-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--teams-border-subtle);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.in-chat-approval-header .title-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.in-chat-approval-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.in-chat-approval-grid {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 12px;
+  background-color: #1A1A1A;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.in-chat-approval-grid .k {
+  color: var(--teams-text-secondary);
+  font-weight: 500;
+}
+.in-chat-approval-grid .v {
+  color: #fff;
+  font-weight: 600;
+}
+.in-chat-approval-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.in-chat-btn-approve {
+  background-color: var(--teams-brand);
+  border: none;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.in-chat-btn-approve:hover {
+  background-color: var(--teams-brand-hover);
+  transform: translateY(-1px);
+}
+.in-chat-btn-reject {
+  background-color: transparent;
+  border: 1px solid var(--status-busy);
+  color: #FF6B81;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.in-chat-btn-reject:hover {
+  background-color: rgba(196, 49, 75, 0.15);
+}
+.approval-status-stamp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+}
+.approval-status-stamp.approved {
+  color: #107C41;
+  background-color: rgba(16, 124, 65, 0.15);
+}
+.approval-status-stamp.rejected {
+  color: #C4314B;
+  background-color: rgba(196, 49, 75, 0.15);
 }
 
 /* ==========================================================================

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260923_v2" />
+  <link rel="stylesheet" href="style.css?v=20260923_v3" />
 </head>
 <body class="teams-dark-theme">
   <div class="teams-app-window">
@@ -54,6 +54,29 @@
           </select>
         </div>
 
+        <!-- Top Activity Bell Button -->
+        <div class="activity-bell-wrapper">
+          <button id="topActivityBell" class="teams-icon-btn bell-btn" title="Activity Notifications & Approvals">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M12 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 005 13h14a1 1 0 00.707-1.707L19 10.586V8a6 6 0 00-6-6zm-4 13a4 4 0 008 0H8z"/>
+            </svg>
+            <span class="bell-badge" id="topBellBadge" style="display:none;">0</span>
+          </button>
+
+          <!-- Activity Notifications Dropdown Flyout -->
+          <div class="activity-flyout" id="activityFlyout" style="display:none;">
+            <div class="flyout-header">
+              <h3>Notifications & Approvals</h3>
+              <span class="flyout-count" id="flyoutCount">0 new</span>
+            </div>
+            <div class="flyout-list" id="activityFeedList">
+              <div class="empty-flyout" id="emptyActivityMsg">
+                <p>No new approval notifications.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button id="resetBtn" class="teams-icon-btn" title="Reset Session Demo">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
             <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
@@ -79,17 +102,18 @@
     <!-- 2. MAIN TEAMS APP CONTAINER -->
     <div class="teams-body">
       
-      <!-- Left App Navigation Bar (Activity, Chat, Teams, Calendar, Approvals) -->
+      <!-- Left App Navigation Bar (Activity, Chat, Teams, Calendar, Apps) -->
       <nav class="teams-rail-nav">
-        <button class="rail-item" title="Activity">
+        <!-- Bell Icon / Activity Item with Badge -->
+        <button class="rail-item" id="railActivityBtn" title="Activity (Approvals & Notifications)">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M12 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 005 13h14a1 1 0 00.707-1.707L19 10.586V8a6 6 0 00-6-6zm-4 13a4 4 0 008 0H8z"/>
           </svg>
           <span class="rail-label">Activity</span>
-          <span class="rail-badge">2</span>
+          <span class="rail-badge" id="railActivityBadge" style="display:none;">0</span>
         </button>
 
-        <button class="rail-item active" title="Chat">
+        <button class="rail-item active" id="railChatBtn" title="Chat">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
           </svg>
@@ -101,14 +125,6 @@
             <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
           </svg>
           <span class="rail-label">Teams</span>
-        </button>
-
-        <button class="rail-item" title="Approvals" id="railApprovalsBtn">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-          </svg>
-          <span class="rail-label">Approvals</span>
-          <span class="rail-badge" id="railApprovalsBadge" style="display:none;">0</span>
         </button>
 
         <button class="rail-item" title="Calendar">
@@ -139,6 +155,22 @@
         <div class="chat-section-label">Pinned</div>
 
         <div class="chat-conversations">
+          <!-- Dynamic Approvals Chat Item (Appears when approval requested) -->
+          <div class="conversation-item highlight-approval" id="chatItemApprovals" style="display:none;">
+            <div class="bot-avatar-container">
+              <div class="avatar-circle approval-icon-bg">📬</div>
+              <span class="presence-dot busy"></span>
+            </div>
+            <div class="conv-details">
+              <div class="conv-header">
+                <span class="conv-title">Approvals Hub <span class="badge-approval-tag">ACTION</span></span>
+                <span class="conv-time" id="approvalChatTime">Just now</span>
+              </div>
+              <div class="conv-preview" id="approvalChatPreview" style="color:#F7A800; font-weight:600;">Pending approval request...</div>
+            </div>
+            <span class="unread-dot"></span>
+          </div>
+
           <!-- Active Conversation: AE Bot -->
           <div class="conversation-item active" id="chatItemBot">
             <div class="bot-avatar-container">
@@ -192,14 +224,14 @@
         <!-- Bot Header (Official Microsoft Teams App Header) -->
         <header class="bot-app-header">
           <div class="bot-header-left">
-            <div class="bot-header-avatar">🤖</div>
+            <div class="bot-header-avatar" id="headerAvatar">🤖</div>
             <div class="bot-header-titles">
               <div class="title-row">
-                <h1>AE Bot</h1>
-                <span class="badge-bot-capsule">BOT</span>
+                <h1 id="headerBotTitle">AE Bot</h1>
+                <span class="badge-bot-capsule" id="headerBotBadge">BOT</span>
                 <span class="badge-verified-check" title="Verified Microsoft Teams Bot">✓ Verified</span>
               </div>
-              <p class="bot-subtitle">Autonomous IT Service Management • Powered by MAF & AutomationEdge RPA</p>
+              <p class="bot-subtitle" id="headerBotSubtitle">Autonomous IT Service Management • Powered by MAF & AutomationEdge RPA</p>
             </div>
           </div>
           <div class="bot-header-right">
@@ -209,17 +241,11 @@
           </div>
         </header>
 
-        <!-- Official Microsoft Teams Tab Navigation -->
+        <!-- Official Microsoft Teams Tab Navigation (Streamlined) -->
         <nav class="teams-tabs-header">
           <button class="teams-tab active" id="tabChatBtn">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M14 1a1 1 0 011 1v8a1 1 0 01-1 1H4.414A2 2 0 003 11.586l-2 2V2a1 1 0 011-1h12z"/></svg>
             <span>Chat</span>
-          </button>
-          
-          <button class="teams-tab" id="tabApprovalsBtn">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M12.736 3.97a.733.733 0 011.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 01-1.065.02L3.217 8.384a.757.757 0 010-1.06.733.733 0 011.047 0l3.052 3.093 5.4-6.425a.247.247 0 01.02-.022z"/></svg>
-            <span>Approvals</span>
-            <span class="tab-badge" id="approvalsBadge" style="display:none;">0</span>
           </button>
 
           <button class="teams-tab" id="tabCatalogBtn">
@@ -304,32 +330,7 @@
           </div>
         </div>
 
-        <!-- TAB 2: APPROVALS TAB CONTENT (Microsoft Teams Approvals App Template) -->
-        <div class="tab-content" id="approvalsTabView" style="display:none;">
-          <div class="approvals-dashboard">
-            <div class="approvals-top-banner">
-              <div>
-                <h2>Approvals Hub</h2>
-                <p>Manage pending authorization requests for privileged IT access and software licenses.</p>
-              </div>
-              <div class="approval-filter-pills">
-                <button class="filter-pill active">All Requests</button>
-                <button class="filter-pill">Pending</button>
-                <button class="filter-pill">Approved</button>
-              </div>
-            </div>
-
-            <div class="approvals-cards-grid" id="approvalsList">
-              <div class="no-approvals-card" id="noApprovalsMsg">
-                <div class="empty-icon">📬</div>
-                <h3>No pending approvals</h3>
-                <p>When you submit a request requiring management sign-off (such as SAP Access or Distribution Lists), interactive Teams approval cards will appear here.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB 3: SERVICE CATALOG TAB CONTENT -->
+        <!-- TAB 2: SERVICE CATALOG TAB CONTENT -->
         <div class="tab-content" id="catalogTabView" style="display:none;">
           <div class="catalog-container">
             <div class="catalog-header">
@@ -371,7 +372,7 @@
           </div>
         </div>
 
-        <!-- TAB 4: MAF REASONING & OBSERVABILITY TAB CONTENT -->
+        <!-- TAB 3: MAF REASONING & OBSERVABILITY TAB CONTENT -->
         <div class="tab-content" id="observabilityTabView" style="display:none;">
           <div class="observability-dashboard">
             <div class="obs-header">
@@ -423,6 +424,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260923_v2"></script>
+  <script src="app.js?v=20260923_v3"></script>
 </body>
 </html>

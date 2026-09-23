@@ -11,22 +11,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarPreview = document.getElementById('sidebarPreview');
   const lastMsgTime = document.getElementById('lastMsgTime');
 
-  // Tab Elements
+  // Activity Bell & Flyout
+  const topActivityBell = document.getElementById('topActivityBell');
+  const topBellBadge = document.getElementById('topBellBadge');
+  const activityFlyout = document.getElementById('activityFlyout');
+  const activityFeedList = document.getElementById('activityFeedList');
+  const emptyActivityMsg = document.getElementById('emptyActivityMsg');
+  const flyoutCount = document.getElementById('flyoutCount');
+  const railActivityBtn = document.getElementById('railActivityBtn');
+  const railActivityBadge = document.getElementById('railActivityBadge');
+
+  // Sidebar Chats
+  const chatItemApprovals = document.getElementById('chatItemApprovals');
+  const chatItemBot = document.getElementById('chatItemBot');
+  const chatItemPriya = document.getElementById('chatItemPriya');
+  const chatItemHelpdesk = document.getElementById('chatItemHelpdesk');
+  const approvalChatTime = document.getElementById('approvalChatTime');
+  const approvalChatPreview = document.getElementById('approvalChatPreview');
+
+  // Tabs
   const tabChatBtn = document.getElementById('tabChatBtn');
-  const tabApprovalsBtn = document.getElementById('tabApprovalsBtn');
   const tabCatalogBtn = document.getElementById('tabCatalogBtn');
   const tabObservabilityBtn = document.getElementById('tabObservabilityBtn');
-  const railApprovalsBtn = document.getElementById('railApprovalsBtn');
 
   const chatTabView = document.getElementById('chatTabView');
-  const approvalsTabView = document.getElementById('approvalsTabView');
   const catalogTabView = document.getElementById('catalogTabView');
   const observabilityTabView = document.getElementById('observabilityTabView');
-
-  const approvalsBadge = document.getElementById('approvalsBadge');
-  const railApprovalsBadge = document.getElementById('railApprovalsBadge');
-  const approvalsList = document.getElementById('approvalsList');
-  const noApprovalsMsg = document.getElementById('noApprovalsMsg');
 
   // Observability & Telemetry
   const ticketBadge = document.getElementById('ticketBadge');
@@ -36,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let pendingApprovals = [];
   let currentSender = "Aarav Sharma (Finance Analyst)";
+  let activeChat = "bot"; // "bot" or "approvals"
 
   // Initialize Welcome Time
   const now = new Date();
@@ -57,10 +68,29 @@ document.addEventListener('DOMContentLoaded', () => {
     addLog(`[Persona Switch] Active user is now: ${currentSender}`, 'info');
   });
 
-  // --- 2. TEAMS TAB SWITCHING ---
+  // --- 2. ACTIVITY BELL FLYOUT TOGGLE ---
+  function toggleActivityFlyout(e) {
+    if (e) e.stopPropagation();
+    const isVisible = activityFlyout.style.display === 'block';
+    activityFlyout.style.display = isVisible ? 'none' : 'block';
+  }
+
+  topActivityBell?.addEventListener('click', toggleActivityFlyout);
+  railActivityBtn?.addEventListener('click', (e) => {
+    toggleActivityFlyout(e);
+  });
+
+  // Close flyout when clicking anywhere outside
+  document.addEventListener('click', (e) => {
+    if (activityFlyout && !activityFlyout.contains(e.target) && !topActivityBell.contains(e.target) && !railActivityBtn.contains(e.target)) {
+      activityFlyout.style.display = 'none';
+    }
+  });
+
+  // --- 3. TEAMS TAB SWITCHING ---
   function switchTab(target) {
-    const tabs = [tabChatBtn, tabApprovalsBtn, tabCatalogBtn, tabObservabilityBtn];
-    const views = [chatTabView, approvalsTabView, catalogTabView, observabilityTabView];
+    const tabs = [tabChatBtn, tabCatalogBtn, tabObservabilityBtn];
+    const views = [chatTabView, catalogTabView, observabilityTabView];
 
     tabs.forEach(t => t && t.classList.remove('active'));
     views.forEach(v => {
@@ -75,10 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
       chatTabView.style.display = 'flex';
       chatTabView.classList.add('active');
       scrollToBottom();
-    } else if (target === 'approvals' && tabApprovalsBtn && approvalsTabView) {
-      tabApprovalsBtn.classList.add('active');
-      approvalsTabView.style.display = 'flex';
-      approvalsTabView.classList.add('active');
     } else if (target === 'catalog' && tabCatalogBtn && catalogTabView) {
       tabCatalogBtn.classList.add('active');
       catalogTabView.style.display = 'flex';
@@ -91,10 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   tabChatBtn?.addEventListener('click', () => switchTab('chat'));
-  tabApprovalsBtn?.addEventListener('click', () => switchTab('approvals'));
   tabCatalogBtn?.addEventListener('click', () => switchTab('catalog'));
   tabObservabilityBtn?.addEventListener('click', () => switchTab('observability'));
-  railApprovalsBtn?.addEventListener('click', () => switchTab('approvals'));
 
   // Catalog Item Clicks
   document.querySelectorAll('.catalog-item-card').forEach(card => {
@@ -108,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Reset Button
-  resetBtn.addEventListener('click', async () => {
+  resetBtn?.addEventListener('click', async () => {
     try {
       await fetch('/api/reset', { method: 'POST' });
       location.reload();
@@ -117,7 +141,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- 3. LOGGING & TELEMETRY ---
+  // Sidebar Chats Selection
+  chatItemBot?.addEventListener('click', () => {
+    setActiveConversation('bot');
+  });
+
+  chatItemApprovals?.addEventListener('click', () => {
+    setActiveConversation('approvals');
+  });
+
+  function setActiveConversation(conv) {
+    activeChat = conv;
+    if (conv === 'bot') {
+      chatItemBot.classList.add('active');
+      chatItemApprovals.classList.remove('active');
+    } else {
+      chatItemApprovals.classList.add('active');
+      chatItemBot.classList.remove('active');
+      // Persona automatically hints to Approver
+      personaSelect.value = "Priya Patel (Finance Director)";
+      currentSender = personaSelect.value;
+      userAvatarInitials.textContent = "PP";
+      userAvatarInitials.title = "Priya Patel (Approver)";
+    }
+    switchTab('chat');
+  }
+
+  // --- 4. LOGGING & TELEMETRY ---
   function addLog(msg, type = 'info') {
     if (!telemetryLogs) return;
     const entry = document.createElement('div');
@@ -171,7 +221,153 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- 4. MESSAGE RENDERING ---
+  // --- 5. NOTIFICATION & APPROVALS ROUTING (BELL ICON & NEW CHAT) ---
+  function updateActivityBellNotifications() {
+    const activePending = pendingApprovals.filter(a => a.status === 'Awaiting Approval' || a.status === 'Pending Approval');
+    const count = activePending.length;
+
+    // Update Badges on Bell icons
+    if (topBellBadge) {
+      topBellBadge.textContent = count;
+      topBellBadge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (railActivityBadge) {
+      railActivityBadge.textContent = count;
+      railActivityBadge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (flyoutCount) {
+      flyoutCount.textContent = `${count} pending`;
+    }
+
+    // Update Activity Flyout List
+    if (count === 0) {
+      activityFeedList.innerHTML = `
+        <div class="empty-flyout" id="emptyActivityMsg">
+          <p>No new approval notifications.</p>
+        </div>
+      `;
+      return;
+    }
+
+    activityFeedList.innerHTML = '';
+    activePending.forEach(item => {
+      const flyoutItem = document.createElement('div');
+      flyoutItem.className = 'flyout-item unread';
+      const ticketNum = item.ticket_number || item.ticket_id;
+      const reqType = item.request_type || item.title || 'IT Approval';
+      const requester = item.requested_for || item.requester || 'Aarav Sharma';
+      const targetItem = item.requested_item || item.software_spec || 'System Access';
+
+      flyoutItem.innerHTML = `
+        <div class="flyout-item-header">
+          <div class="flyout-item-title">🔔 Approval Requested</div>
+          <div class="flyout-item-time">Just now</div>
+        </div>
+        <div class="flyout-item-desc">
+          <strong>${escapeHtml(requester)}</strong> requested <strong>${escapeHtml(targetItem)}</strong> (${escapeHtml(reqType)} • #${escapeHtml(ticketNum)}).
+        </div>
+        <div class="flyout-actions">
+          <button class="flyout-btn-reject" data-ticket="${ticketNum}">Reject</button>
+          <button class="flyout-btn-approve" data-ticket="${ticketNum}">Approve</button>
+        </div>
+      `;
+
+      flyoutItem.querySelector('.flyout-btn-approve').addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleApproval(ticketNum, 'approve');
+        activityFlyout.style.display = 'none';
+      });
+
+      flyoutItem.querySelector('.flyout-btn-reject').addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleApproval(ticketNum, 'reject');
+        activityFlyout.style.display = 'none';
+      });
+
+      activityFeedList.appendChild(flyoutItem);
+    });
+
+    // Light up the Approvals conversation item in the sidebar
+    if (chatItemApprovals) {
+      chatItemApprovals.style.display = 'flex';
+      const latest = activePending[0];
+      if (latest && approvalChatPreview) {
+        approvalChatPreview.textContent = `Action Required: Approve ${latest.request_type || 'Access'} (#${latest.ticket_number || latest.ticket_id})`;
+      }
+      if (approvalChatTime) {
+        approvalChatTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+  }
+
+  // --- 6. IN-CHAT APPROVAL ADAPTIVE CARD (FLUENT 2 DESIGN) ---
+  function appendInChatApprovalCard(ticket) {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const block = document.createElement('div');
+    block.className = 'message-block bot-block';
+    const ticketNum = ticket.ticket_number || ticket.ticket_id;
+    const reqType = ticket.request_type || 'IT Access Request';
+    const requester = ticket.requested_for || ticket.requester || 'Aarav Sharma';
+    const approver = ticket.approver || 'Priya Patel (Finance Director)';
+    const itemSpec = ticket.requested_item || ticket.software_spec || 'SAP S/4HANA Finance Authorization';
+
+    block.innerHTML = `
+      <div class="msg-avatar bot-avatar">🤖</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author">AE Bot</span>
+          <span class="badge-bot-capsule">BOT</span>
+          <span class="msg-timestamp">${time}</span>
+        </div>
+        <div class="in-chat-approval-card" id="card-${ticketNum}">
+          <div class="in-chat-approval-header">
+            <div class="title-badge-group">
+              <span style="font-size:16px;">📬</span>
+              <h4>Action Required: ${escapeHtml(reqType)}</h4>
+            </div>
+            <span class="approval-badge pending" id="badge-${ticketNum}">Pending Approval</span>
+          </div>
+
+          <div class="in-chat-approval-grid">
+            <div class="k">Incident:</div>
+            <div class="v">
+              <a href="${ticket.snow_link || '#'}" target="_blank" style="color:#7B83EB; text-decoration:underline;">
+                #${escapeHtml(ticketNum)} (ServiceNow)
+              </a>
+            </div>
+            <div class="k">Requester:</div><div class="v">${escapeHtml(requester)}</div>
+            <div class="k">Approver:</div><div class="v">${escapeHtml(approver)}</div>
+            <div class="k">Target Item:</div><div class="v">${escapeHtml(itemSpec)}</div>
+            <div class="k">Security SLA:</div><div class="v">High • Standard 8h window</div>
+          </div>
+
+          <div class="in-chat-approval-actions" id="actions-${ticketNum}">
+            <button class="in-chat-btn-reject" id="btnReject-${ticketNum}">
+              ✕ Reject Request
+            </button>
+            <button class="in-chat-btn-approve" id="btnApprove-${ticketNum}">
+              ✓ Approve Request
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    messagesContainer.appendChild(block);
+
+    // Bind approve/reject events
+    block.querySelector(`#btnApprove-${ticketNum}`).addEventListener('click', () => {
+      handleApproval(ticketNum, 'approve');
+    });
+
+    block.querySelector(`#btnReject-${ticketNum}`).addEventListener('click', () => {
+      handleApproval(ticketNum, 'reject');
+    });
+
+    scrollToBottom();
+  }
+
+  // --- 7. MESSAGE RENDERING ---
   function appendUserMessage(text) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const block = document.createElement('div');
@@ -238,13 +434,12 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
   }
 
-  // Adaptive Card 1.5 Renderer
+  // Adaptive Card 1.5 Form Renderer
   function appendAdaptiveCard(cardPayload) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const block = document.createElement('div');
     block.className = 'message-block bot-block';
 
-    // Parse Adaptive Card body items
     let cardBodyHtml = '';
     const bodyItems = cardPayload.body || [];
 
@@ -266,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cardBodyHtml += `
           <div class="adaptive-form-group">
             <label class="adaptive-label">${escapeHtml(item.placeholder || 'Enter value')}</label>
-            <input type="${item.isMultiline ? 'text' : 'text'}" id="${item.id}" class="adaptive-input" placeholder="${escapeHtml(item.placeholder || '')}" value="${escapeHtml(item.value || '')}" />
+            <input type="text" id="${item.id}" class="adaptive-input" placeholder="${escapeHtml(item.placeholder || '')}" value="${escapeHtml(item.value || '')}" />
           </div>
         `;
       }
@@ -313,78 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
   }
 
-  // --- 5. APPROVALS HUB RENDERING ---
-  function updateApprovalsBadge() {
-    const count = pendingApprovals.filter(a => a.status === 'Awaiting Approval' || a.status === 'Pending Approval').length;
-    if (approvalsBadge) {
-      approvalsBadge.textContent = count;
-      approvalsBadge.style.display = count > 0 ? 'inline-block' : 'none';
-    }
-    if (railApprovalsBadge) {
-      railApprovalsBadge.textContent = count;
-      railApprovalsBadge.style.display = count > 0 ? 'inline-block' : 'none';
-    }
-  }
-
-  function renderApprovalCards() {
-    if (!approvalsList) return;
-    
-    if (pendingApprovals.length === 0) {
-      if (noApprovalsMsg) noApprovalsMsg.style.display = 'block';
-      return;
-    }
-    
-    if (noApprovalsMsg) noApprovalsMsg.style.display = 'none';
-    
-    approvalsList.innerHTML = '';
-    
-    pendingApprovals.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'approval-item-card';
-
-      const statusClass = item.status.includes('Approved') ? 'approved' : item.status.includes('Rejected') ? 'rejected' : 'pending';
-      const isPending = statusClass === 'pending';
-
-      card.innerHTML = `
-        <div class="approval-card-header">
-          <div class="approval-title-group">
-            <h4 style="font-size:14px; font-weight:700; color:#fff;">${escapeHtml(item.request_type || item.title || 'IT Approval Request')}</h4>
-            <span style="font-size:12px; color:#7B83EB; font-weight:600;">#${escapeHtml(item.ticket_number || item.ticket_id)}</span>
-          </div>
-          <span class="approval-badge ${statusClass}">${escapeHtml(item.status)}</span>
-        </div>
-
-        <div class="approval-details-grid">
-          <div class="grid-row-k">Requester:</div><div class="grid-row-v">${escapeHtml(item.requested_for || item.requester || 'Aarav Sharma')}</div>
-          <div class="grid-row-k">Approver:</div><div class="grid-row-v">${escapeHtml(item.approver || 'Priya Patel (Finance Director)')}</div>
-          <div class="grid-row-k">Requested Item:</div><div class="grid-row-v">${escapeHtml(item.requested_item || item.software_spec || 'System Access')}</div>
-          <div class="grid-row-k">Priority / SLA:</div><div class="grid-row-v">${escapeHtml(item.priority || 'Medium')} (Target: 8 hrs)</div>
-        </div>
-
-        ${isPending ? `
-          <div class="approval-actions-bar">
-            <button class="btn-reject" data-ticket="${item.ticket_number || item.ticket_id}">Reject</button>
-            <button class="btn-approve" data-ticket="${item.ticket_number || item.ticket_id}">Approve Request</button>
-          </div>
-        ` : `
-          <div style="font-size:12px; color:#ADADAD; text-align:right;">
-            Status: <strong>${escapeHtml(item.status)}</strong> • Authorization Logged
-          </div>
-        `}
-      `;
-
-      if (isPending) {
-        card.querySelector('.btn-approve').addEventListener('click', () => handleApproval(item.ticket_number || item.ticket_id, 'approve'));
-        card.querySelector('.btn-reject').addEventListener('click', () => handleApproval(item.ticket_number || item.ticket_id, 'reject'));
-      }
-
-      approvalsList.appendChild(card);
-    });
-
-    updateApprovalsBadge();
-  }
-
-  // --- 6. API COMMUNICATION ---
+  // --- 8. API COMMUNICATION ---
   async function sendMessage(text) {
     appendUserMessage(text);
     if (typingIndicator) typingIndicator.style.display = 'flex';
@@ -410,18 +534,20 @@ document.addEventListener('DOMContentLoaded', () => {
         updateServiceNowWidget(data.ticket);
         if (data.requires_approval) {
           pendingApprovals.unshift(data.ticket);
-          renderApprovalCards();
-          addLog(`[Governance] Approval card routed to Priya Patel for Incident ${data.ticket.ticket_number}`, 'warning');
+          updateActivityBellNotifications();
+          addLog(`[Governance] Approval routed to Bell Icon & Approvals Hub for Incident ${data.ticket.ticket_number}`, 'warning');
+          // In-Chat Approval Card
+          appendInChatApprovalCard(data.ticket);
         } else {
-          // Trigger automated fulfillment immediately if no approval required
+          // Trigger automated fulfillment immediately if auto-approved
           triggerFulfillment(data.ticket.ticket_number);
         }
       }
 
       if (data.adaptive_card || data.form_card) {
         appendAdaptiveCard(data.adaptive_card || data.form_card);
-      } else {
-        appendBotMessage(data.reply || "Request processed.", data.suggestions || []);
+      } else if (data.reply) {
+        appendBotMessage(data.reply, data.suggestions || []);
       }
 
     } catch (err) {
@@ -455,10 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.ticket) {
         updateServiceNowWidget(data.ticket);
         pendingApprovals.unshift(data.ticket);
-        renderApprovalCards();
+        updateActivityBellNotifications();
+        appendInChatApprovalCard(data.ticket);
       }
 
-      appendBotMessage(data.reply || "Form received.", data.suggestions || []);
+      if (data.reply) {
+        appendBotMessage(data.reply, data.suggestions || []);
+      }
 
     } catch (err) {
       if (typingIndicator) typingIndicator.style.display = 'none';
@@ -467,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleApproval(ticketId, action) {
-    addLog(`[Approval] ${currentSender} clicked ${action.toUpperCase()} for Ticket ${ticketId}`, 'info');
+    addLog(`[Approval] Priya Patel (Approver) clicked ${action.toUpperCase()} for Ticket ${ticketId}`, 'info');
 
     try {
       const resp = await fetch('/api/approval', {
@@ -486,13 +615,43 @@ document.addEventListener('DOMContentLoaded', () => {
       if (item) {
         item.status = action === 'approve' ? 'Approved' : 'Rejected';
       }
-      renderApprovalCards();
+
+      // Update In-Chat Card UI
+      const cardEl = document.getElementById(`card-${ticketId}`);
+      const badgeEl = document.getElementById(`badge-${ticketId}`);
+      const actionsEl = document.getElementById(`actions-${ticketId}`);
+
+      if (cardEl && badgeEl && actionsEl) {
+        if (action === 'approve') {
+          cardEl.classList.remove('rejected');
+          cardEl.classList.add('approved');
+          badgeEl.className = 'approval-badge approved';
+          badgeEl.textContent = 'Approved';
+          actionsEl.innerHTML = `
+            <div class="approval-status-stamp approved">
+              ✓ Approved by Priya Patel (${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})
+            </div>
+          `;
+        } else {
+          cardEl.classList.add('rejected');
+          badgeEl.className = 'approval-badge rejected';
+          badgeEl.textContent = 'Rejected';
+          actionsEl.innerHTML = `
+            <div class="approval-status-stamp rejected">
+              ✕ Rejected by Priya Patel (${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})
+            </div>
+          `;
+        }
+      }
+
+      // Update Bell Notification badges
+      updateActivityBellNotifications();
 
       if (action === 'approve') {
-        appendBotMessage(`✅ **Approval Confirmed** by **Priya Patel (Finance Director)** for Request **${ticketId}**.\n\n⚙️ *Triggering AutomationEdge RPA orchestration...*`);
+        appendBotMessage(`✅ **Approval Confirmed** by **Priya Patel (Finance Director)** for Request **#${ticketId}**.\n\n⚙️ *Triggering AutomationEdge RPA orchestration...*`);
         triggerFulfillment(ticketId);
       } else {
-        appendBotMessage(`❌ Request **${ticketId}** was **Rejected** by **Priya Patel (Finance Director)**.`);
+        appendBotMessage(`❌ Request **#${ticketId}** was **Rejected** by **Priya Patel (Finance Director)**.`);
       }
 
     } catch (err) {
@@ -533,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- 7. UTILITY HELPERS ---
+  // --- 9. UTILITY HELPERS ---
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -547,13 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatMarkdown(text) {
     if (!text) return '';
     let res = text;
-    // Bold
     res = res.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic
     res = res.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    // Links [title](url)
     res = res.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
-    // Newlines to <br> or paragraphs
     res = res.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
     return `<p>${res}</p>`;
   }
