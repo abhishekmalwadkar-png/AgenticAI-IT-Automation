@@ -14,7 +14,10 @@ from teams_bot_app.servicenow_client import ServiceNowLiveClient
 app = FastAPI(title="Teams AE Bot - IT Service Automation Simulator")
 
 # Load environment variables
-def load_env(env_path: str = ".env"):
+def load_env(env_path: Optional[str] = None):
+    if env_path is None:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env_path = os.path.join(base_dir, ".env")
     if os.path.exists(env_path):
         with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -23,7 +26,7 @@ def load_env(env_path: str = ".env"):
                     k, v = line.split("=", 1)
                     os.environ[k.strip()] = v.strip()
 
-load_env("d:/Agentic_AI-IT_service_automation/.env")
+load_env()
 
 SNOW_URL = os.getenv("SERVICENOW_INSTANCE_URL", "").rstrip("/")
 SNOW_USER = os.getenv("SERVICENOW_USER", "")
