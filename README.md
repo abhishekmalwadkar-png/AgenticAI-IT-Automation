@@ -114,19 +114,19 @@ pip install fastapi uvicorn requests google-generativeai pydantic
 Create a `.env` file in the root directory:
 ```env
 # ServiceNow Configuration
-SERVICENOW_INSTANCE_URL=https://dev196223.service-now.com/
-SERVICENOW_USER=ae_integration
-SERVICENOW_PASSWORD=AutomationEdge@2026
+SERVICENOW_INSTANCE_URL=https://your-instance.service-now.com/
+SERVICENOW_USER=your_servicenow_username
+SERVICENOW_PASSWORD=your_servicenow_password
 
 # (Optional) ServiceNow OAuth 2.0 Credentials
-SERVICENOW_CLIENT_ID=f763dff82afb4388bd52258e96850c9c
-SERVICENOW_CLIENT_SECRET=GkLTW]cqkfO4&}hKu[{`ME9l@jSkwAn2
+SERVICENOW_CLIENT_ID=your_oauth_client_id
+SERVICENOW_CLIENT_SECRET=your_oauth_client_secret
 
 # AutomationEdge (T4) RPA Server Configuration
 AUTOMATIONEDGE_T4_URL=https://t4.automationedge.com
 AUTOMATIONEDGE_T4_USER=your_email@company.com
 AUTOMATIONEDGE_T4_PASSWORD=your_password
-AUTOMATIONEDGE_T4_ORGCODE=AE_POC_TEAM
+AUTOMATIONEDGE_T4_ORGCODE=your_org_code
 
 # LLM Configuration
 GEMINI_API_KEY=your_gemini_api_key_here
