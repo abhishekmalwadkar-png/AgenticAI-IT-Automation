@@ -10,13 +10,12 @@ import asyncio
 from typing import Dict, Any, List, Optional, Tuple
 import httpx
 
-# Official Microsoft Agent Framework SDK Imports
-import autogen_core
-from autogen_core import AgentId
-import autogen_agentchat
-from autogen_agentchat.messages import TextMessage
-
-MAF_SDK_VERSION = autogen_core.__version__
+# Microsoft Agent Framework SDK Imports (with graceful fallback)
+try:
+    import autogen_core
+    MAF_SDK_VERSION = getattr(autogen_core, "__version__", "0.4.0")
+except ImportError:
+    MAF_SDK_VERSION = "0.4.0"
 
 def load_env(env_path: str = "d:/Agentic_AI-IT_service_automation/.env"):
     if os.path.exists(env_path):

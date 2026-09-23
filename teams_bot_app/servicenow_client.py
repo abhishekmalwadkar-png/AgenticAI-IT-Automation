@@ -4,8 +4,6 @@ Provides native asyncio / httpx integration for high-performance non-blocking IT
 """
 
 import os
-import re
-import json
 import base64
 import asyncio
 from typing import Dict, Any, Optional

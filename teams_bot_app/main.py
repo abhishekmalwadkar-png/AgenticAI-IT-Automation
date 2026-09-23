@@ -7,7 +7,7 @@ import random
 import time
 from typing import Dict, Any, List, Optional, Tuple
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
