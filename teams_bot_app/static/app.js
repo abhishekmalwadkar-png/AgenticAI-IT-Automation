@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateActivityBellNotifications();
 
       if (action === 'approve') {
-        appendBotMessage(`✅ **Approval Confirmed** by **Priya Patel (Finance Director)** for Request **#${ticketId}**.\n\n⚙️ *Triggering AutomationEdge RPA orchestration...*`);
+        appendBotMessage(`✅ **Approval Confirmed** by **Priya Patel (Finance Director)** for Request **#${ticketId}**.\n\n⚙️ *Initiating AutomationEdge RPA workflow execution...*`);
         triggerFulfillment(ticketId);
       } else {
         appendBotMessage(`❌ Request **#${ticketId}** was **Rejected** by **Priya Patel (Finance Director)**.`);
@@ -662,8 +662,18 @@ document.addEventListener('DOMContentLoaded', () => {
   async function triggerFulfillment(ticketId) {
     setStage(4);
     addLog(`[MAF Orchestrator] Constructing Execution Plan for ${ticketId}...`, 'info');
+    
+    // Show workflow running indicator in UI
+    if (typingIndicator) {
+      const typingSpan = typingIndicator.querySelector('span');
+      if (typingSpan) typingSpan.textContent = 'AE Bot is running AutomationEdge RPA workflow...';
+      typingIndicator.style.display = 'flex';
+    }
 
     try {
+      setStage(5);
+      addLog(`[MAF Dispatcher] Running AutomationEdge T4 RPA workflow for ${ticketId}...`, 'info');
+
       const resp = await fetch(`/api/fulfill/${ticketId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -671,24 +681,38 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await resp.json();
+      if (typingIndicator) typingIndicator.style.display = 'none';
 
       if (data.ticket) {
         updateServiceNowWidget(data.ticket);
       }
 
-      if (data.success) {
+      // ONLY send the 'query resolved' message once the workflow has completed with Resolved status
+      if (data.success && data.ticket && (data.ticket.status === 'Resolved' || data.ticket.status.includes('Resolved'))) {
         setStage(6);
-        addLog(`[Fulfillment Success] AutomationEdge RPA completed. Incident ${ticketId} resolved!`, 'success');
+        addLog(`[Workflow Completed] AutomationEdge RPA workflow finished successfully with status: COMPLETE. Incident ${ticketId} is Resolved.`, 'success');
         
-        appendBotMessage(`🎉 **Your query has been resolved!**\n\n${data.completion_card?.details || 'Your request has been successfully completed via AutomationEdge RPA.'}\n\nServiceNow Incident: [${ticketId}](${data.ticket?.snow_link || '#'}) status set to **Resolved (6)**.`);
+        const workflowName = data.plan?.specialized_agent || 'AutomationEdge RPA Workflow';
+        const resolutionDetails = data.completion_card?.details || 'Your request has been successfully completed via AutomationEdge RPA.';
+        const snowLink = data.ticket?.snow_link || '#';
+
+        appendBotMessage(
+          `🎉 **Your query has been resolved!**\n\n` +
+          `• **Workflow Status**: **Completed (100%)**\n` +
+          `• **Agent/Engine**: ${escapeHtml(workflowName)}\n` +
+          `• **Fulfillment Details**: ${resolutionDetails}\n` +
+          `• **ServiceNow Incident**: [${ticketId}](${snowLink}) has been updated to **Resolved (6)**.`
+        );
       } else {
         setStage(5);
-        addLog(`[Escalation] ${data.ticket?.logs?.[data.ticket?.logs?.length - 1] || 'Fulfillment halted.'}`, 'warning');
-        appendBotMessage(`⚠️ Notice for ticket **${ticketId}**: Reassigned for administrative review.`);
+        addLog(`[Workflow Halted] ${data.ticket?.logs?.[data.ticket?.logs?.length - 1] || 'Workflow execution failed.'}`, 'warning');
+        appendBotMessage(`⚠️ Notice for ticket **#${ticketId}**: The automated workflow could not complete successfully and has been escalated to Tier-2 IT Administration for review.`);
       }
 
     } catch (err) {
+      if (typingIndicator) typingIndicator.style.display = 'none';
       addLog(`[Fulfillment Exception] ${err.message}`, 'error');
+      appendBotMessage(`⚠️ An error occurred while executing the RPA workflow for ticket **#${ticketId}**. Please contact IT support.`);
     }
   }
 
